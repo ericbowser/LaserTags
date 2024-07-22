@@ -1,17 +1,27 @@
 ﻿import React, {useEffect, useState} from 'react';
+import {checkUser} from '../api/tagApi';
 
-function Login() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+const Login = () => {
+    const [username, setUsername] = useState(null);
+    const [password, setPassword] = useState(null);
 
     useEffect(() => {
+
     }, [username, password]);
 
     const handleSubmit = (e) => {
+        console.log(username)
+        console.log(password)
         e.preventDefault();
-        // Handle the login logic here
-        console.log('Username:', username);
-        console.log('Password:', password);
+        const credentials = {
+            username,
+            password
+        }
+        return checkUser(credentials)
+            .then(res => {
+                console.log(res)
+                return res.data;
+            })
     };
 
     return (

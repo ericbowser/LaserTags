@@ -9,4 +9,13 @@ const saveTagInformation = (body = {}) => {
        })
 }
 
-export default saveTagInformation;
+const checkUser = (credentials = {}) => {
+    console.log('Logging in', credentials);
+    return axios.post('http://localhost:32636/login', credentials)
+        .then(res => {
+            console.log('response: ', res.data);
+            return res.data;
+        })
+}
+
+export {saveTagInformation, checkUser};

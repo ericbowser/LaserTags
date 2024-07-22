@@ -1,6 +1,6 @@
 ﻿import QRCode from 'qrcode.react';
 import React, {useEffect, useState} from 'react';
-import saveTagInformation from '../api/tagApi';
+import {saveTagInformation} from '../api/tagApi';
 
 const QrcodeData = ({formData}) => {
     // TODO - get login userid and password to use as unique url
@@ -30,7 +30,7 @@ const QrcodeData = ({formData}) => {
                 });*/
             if(url) {
                 console.log('returned url: ', url);
-                setSavedUrl('http://localhost:');
+                setSavedUrl('http://localhost:31666/1');
             }
         } catch (error) {
             console.log(error);
