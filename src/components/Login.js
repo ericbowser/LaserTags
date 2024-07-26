@@ -1,17 +1,36 @@
 ﻿import React, {useEffect, useState} from 'react';
+import { useNavigate } from 'react-router-dom';
+import {login} from '../api/tagApi';
+/*
+import { ClipLoader } from 'react-spinners';
+*/
 
 function Login() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [username, setUsername] = useState(null);
+    const [password, setPassword] = useState(null);
+    const [userId, setUserId] = useState(null);
+/*
+    const [spinner, setSpinner] = useState(false);
+*/
+    
+    const navigate = useNavigate();
 
     useEffect(() => {
-    }, [username, password]);
+    }, [username, password, userId]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Handle the login logic here
-        console.log('Username:', username);
-        console.log('Password:', password);
+        const body = {
+            username,
+            password
+        }
+        return login(body)
+            .then(res => {
+                console.log('response: ', res);
+                setUserId(res.userid);
+                navigate(`/contact/${res.userid}`);
+                return res;
+            })
     };
 
     return (
@@ -53,6 +72,9 @@ function Login() {
                         </button>
                     </div>
                 </form>
+                {userId && (
+                    <span className={'text-2xl text-green-400 bolder'}>User Id: {userId}</span>
+                )}
             </div>
         </div>
     );

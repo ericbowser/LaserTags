@@ -2,35 +2,15 @@
 import React, {useEffect, useState} from 'react';
 import saveTagInformation from '../api/tagApi';
 
-const QrcodeData = ({formData}) => {
-    // TODO - get login userid and password to use as unique url
-    console.log('form data: ', formData);
+const QrcodeData = (userid) => {
     const [savedUrl, setSavedUrl] = useState(null);
-    const body = {
-        username: formData.username,
-        password: formData.password,
-        firstname: formData.firstname,
-        lastname: formData.lastname,
-        petname: formData.petname,
-        phone: formData.phone,
-        address: formData.phone,
-        city: formData.city,
-        state: formData.state
-    }
     
     async function getUrl() {
         try {
-            const url = await saveTagInformation(body);
-               /* .then(res => {
-                    console.log(res);
-                    if (res) {
-                        setSavedUrl('https://erb-think.com');
-                    }
-                    return url;
-                });*/
-            if(url) {
-                console.log('returned url: ', url);
-                setSavedUrl('http://localhost:');
+            console.log(userid);
+            if(userid) {
+                console.log('returned url: ', userid);
+                setSavedUrl(`http://localhost:31666/${userid}`);
             }
         } catch (error) {
             console.log(error);

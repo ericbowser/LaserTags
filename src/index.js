@@ -6,26 +6,19 @@ import {
     createBrowserRouter,
     RouterProvider,
 } from "react-router-dom";
-import Profile from "./components/Profile";
 import Login from "./components/Login";
 
 const router = createBrowserRouter([
     {
         path: '/',
         element: (
-            <App/>
-        )
-    },
-    {
-        path: '/login',
-        element: (
             <Login/>
         )
     },
     {
-        path: `/:userid`,
+        path: '/contact/:userid',
         element: (
-            <Profile customerId={1}/>
+            <App />
         )
     }
 ])

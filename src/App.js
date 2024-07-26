@@ -1,24 +1,26 @@
 import React, {useEffect, useState} from 'react';
 import QrcodeData from './components/Qrcode';
 import {isEmpty} from "lodash";
+import { useParams } from 'react-router-dom';
+import {saveTagInformation} from './api/tagApi';
 import './output.css';
 
 const App = () => {
     const [allFieldsSet, setAllFieldsSet] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const {userid} = useParams();
     const [formData, setFormData] = useState({
-        username: 'ericbo',
-        password: 'Test123',
+        userid: userid || '',
+        petname: '',
         firstname: '',
         lastname: '',
-        petname: '',
         phone: '',
         address: '',
-        city: '',
-        state: ''
     });
+    console.log(formData);
 
     useEffect(() => {
-    }, [formData, allFieldsSet]);
+    }, [formData, allFieldsSet, saved]);
 
     const handleChange = (e) => {
         setFormData({
@@ -29,14 +31,18 @@ const App = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!isEmpty(formData.firstname)
-            && !isEmpty(formData.lastname)
+        if (!isEmpty(formData.userid)
+            && !isEmpty(formData.firstname)
             && !isEmpty(formData.petname)
-            && !isEmpty(formData.phone)
-            && !isEmpty(formData.city)
-            && !isEmpty(formData.state)
-            && !isEmpty(formData.address)) {
-            setAllFieldsSet(true);
+            && (!isEmpty(formData.phone) && !isEmpty(formData.address))
+        ) {
+            saveTagInformation(formData)
+                .then(res => {
+                    console.log(res);
+                    setSaved(true);
+                }).catch(err => console.error(err));
+        } else {
+            setAllFieldsSet(false);
         }
     };
 
@@ -45,17 +51,18 @@ const App = () => {
             <div className="p-6 max-w-md w-full bg-white rounded-md shadow-lime-500">
                 <h1 className="text-2xl text-red-600 font-bold mb-8">Dog Tag QR Generator</h1>
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
+                    <div>
                         <label className="block text-gray-700">Pet Name</label>
                         <input
                             type="text"
                             name="petname"
+                            required={true}
                             value={formData.petname}
                             onChange={handleChange}
                             className="mt-1 p-2 w-full border rounded-md"
                         />
                     </div>
-                    <div className="mb-4">
+                    <div>
                         <label className="block text-gray-700">First Name</label>
                         <input
                             required={true}
@@ -66,10 +73,9 @@ const App = () => {
                             className="mt-1 p-2 w-full border rounded-md"
                         />
                     </div>
-                    <div className="mb-4">
+                    <div>
                         <label className="block text-gray-700">Last Name</label>
                         <input
-                            required={true}
                             type="text"
                             name="lastname"
                             value={formData.lastname}
@@ -77,7 +83,7 @@ const App = () => {
                             className="mt-1 p-2 w-full border rounded-md"
                         />
                     </div>
-                    <div className="mb-4">
+                    <div>
                         <label className="block text-gray-700">Address</label>
                         <input
                             type="text"
@@ -87,31 +93,12 @@ const App = () => {
                             className="mt-1 p-2 w-full border rounded-md"
                         />
                     </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">City</label>
-                        <input
-                            type="text"
-                            name="city"
-                            value={formData.city}
-                            onChange={handleChange}
-                            className="mt-1 p-2 w-full border rounded-md"
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700">State</label>
-                        <input
-                            type="text"
-                            name="state"
-                            value={formData.state}
-                            onChange={handleChange}
-                            className="mt-1 p-2 w-full border rounded-md"
-                        />
-                    </div>
-                    <div className="mb-4">
+                    <div>
                         <label className="block text-gray-700">Phone</label>
                         <input
                             type="text"
                             name="phone"
+                            required={true}
                             value={formData.phone}
                             onChange={handleChange}
                             className="mt-1 p-2 w-full border rounded-md"
@@ -125,8 +112,8 @@ const App = () => {
                     </button>
                 </form>
             </div>
-            {allFieldsSet &&
-                <QrcodeData formData={formData}/>
+            {saved &&
+                <QrcodeData userid={userid}/>
             }
         </div>
     );
