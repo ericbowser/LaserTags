@@ -31,7 +31,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: './public/index.html'
         }),
-        new Dotenv(),
+        new Dotenv({path: './.env'}),
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
             'process.env.PORT': JSON.stringify(process.env.PORT),

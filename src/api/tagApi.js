@@ -1,6 +1,6 @@
 ﻿import axios from "axios";
 
-export const saveTagInformation = (body = {}) => {
+const saveTagInformation = (body = {}) => {
    console.log('body sending... ', body);
    return axios.post('http://localhost:32636/saveContact', body)
        .then(res => {
@@ -9,13 +9,17 @@ export const saveTagInformation = (body = {}) => {
        })
 }
 
-export const login = (body = {}) => {
+async function login(body = {}) {
     console.log('Login:  ', body);
-    return axios.post('http://localhost:32636/login', body)
+    const user = await axios.post('http://localhost:32636/login', body);
+    console.log(user?.data);
+    return user.data;
+/*
         .then(res => {
             console.log('User id: ', res.data);
             return res.data;
         })
+*/
 }
 
-export default {saveTagInformation, login};
+export {saveTagInformation, login};
