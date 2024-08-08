@@ -1,5 +1,5 @@
 /*
-! tailwindcss v3.4.7 | MIT License | https://tailwindcss.com
+! tailwindcss v3.4.8 | MIT License | https://tailwindcss.com
 */
 
 /*
@@ -41,10 +41,8 @@ html,
   /* 1 */
   -webkit-text-size-adjust: 100%;
   /* 2 */
-  -moz-tab-size: 4;
   /* 3 */
-  -o-tab-size: 4;
-     tab-size: 4;
+  tab-size: 4;
   /* 3 */
   font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   /* 4 */
@@ -377,13 +375,6 @@ textarea {
 1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)
 2. Set the default placeholder color to the user's configured gray 400 color.
 */
-
-input::-moz-placeholder, textarea::-moz-placeholder {
-  opacity: 1;
-  /* 1 */
-  color: #9ca3af;
-  /* 2 */
-}
 
 input::placeholder,
 textarea::placeholder {
@@ -766,7 +757,6 @@ video {
 
 .appearance-none {
   -webkit-appearance: none;
-     -moz-appearance: none;
           appearance: none;
 }
 
@@ -832,8 +822,9 @@ video {
   border-width: 2px;
 }
 
-.border-s-2 {
-  border-inline-start-width: 2px;
+.border-black {
+  --tw-border-opacity: 1;
+  border-color: rgb(0 0 0 / var(--tw-border-opacity));
 }
 
 .border-gray-300 {
@@ -843,21 +834,6 @@ video {
 
 .border-transparent {
   border-color: transparent;
-}
-
-.border-white {
-  --tw-border-opacity: 1;
-  border-color: rgb(255 255 255 / var(--tw-border-opacity));
-}
-
-.border-black {
-  --tw-border-opacity: 1;
-  border-color: rgb(0 0 0 / var(--tw-border-opacity));
-}
-
-.border-amber-500 {
-  --tw-border-opacity: 1;
-  border-color: rgb(245 158 11 / var(--tw-border-opacity));
 }
 
 .bg-black {
@@ -1090,13 +1066,13 @@ video {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
-.shadow-lime-500 {
-  --tw-shadow-color: #84cc16;
+.shadow-blue-700 {
+  --tw-shadow-color: #1d4ed8;
   --tw-shadow: var(--tw-shadow-colored);
 }
 
-.shadow-blue-700 {
-  --tw-shadow-color: #1d4ed8;
+.shadow-lime-500 {
+  --tw-shadow-color: #84cc16;
   --tw-shadow: var(--tw-shadow-colored);
 }
 
@@ -1141,11 +1117,6 @@ video {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
-}
-
-.hover\:bg-blue-700:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(29 78 216 / var(--tw-bg-opacity));
 }
 
 .hover\:bg-indigo-700:hover {

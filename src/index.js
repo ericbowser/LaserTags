@@ -1,12 +1,14 @@
 import React from 'react';
 import {createRoot} from "react-dom/client";
 import './output.css';
-import App from "./App";
 import {
     createBrowserRouter,
     RouterProvider,
 } from "react-router-dom";
 import Login from "./components/Login";
+import Contact from "./components/Contact";
+import App from "./App";
+import './output.css';
 
 const router = createBrowserRouter([
     {
@@ -18,7 +20,7 @@ const router = createBrowserRouter([
     {
         path: '/contact/:userid',
         element: (
-            <App />
+            <Contact />
         )
     }
 ])
