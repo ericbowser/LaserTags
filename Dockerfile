@@ -12,16 +12,15 @@ RUN npm install
 
 # Copy the rest of the application code
 COPY . .
-
-RUN npx tailwindcss build
+RUN npx run build
 
 # Set a default port (can be overridden when running the container)
 ENV PORT=31666
 ENV NODE_ENV=production
-ENV HOST=169.254.123.199
+ENV HOST=localhost
 
 # Expose the port the app runs on
 EXPOSE 31666
 
 # Command to run the application
-CMD ["sh", "-c", "npm run dev --port $PORT"]
+CMD ["sh", "-c", "npx react-scripts start --port $PORT"]

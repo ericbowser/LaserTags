@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const config = require('dotenv').config();
 const webpack = require('webpack');
+const Dotenv = require('dotenv-webpack');
 
 console.log('Node env: ', process.env.NODE_ENV);
 console.log('Hosted port: ', process.env.PORT);
@@ -47,7 +48,14 @@ module.exports = {
     },*/
     plugins: [
         new HtmlWebpackPlugin({
-            template: './public/index.html'
+            template: './public/index.html',
+            chunks: ['vendor', 'main', 'login', 'contact', 'qrcode', 'login'] // Specify the chunks to include
+        }),
+        new Dotenv({path: '.env'}),
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+            'process.env.PORT': JSON.stringify(process.env.PORT),
+            'process.env.HOST': JSON.stringify(process.env.HOST),
         }),
     ],
     devtool: 'eval-source-map',

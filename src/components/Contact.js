@@ -1,4 +1,4 @@
-﻿import React, {useEffect, useState} from 'react';
+﻿import React, {useEffect, useMemo, useState} from 'react';
 import {getContact, saveTagInformation, updateContact} from "../api/tagApi";
 import {isEmpty} from "lodash";
 import QrcodeData from "./Qrcode";
@@ -6,6 +6,7 @@ import {useParams} from 'react-router-dom';
 
 function Contact() {
     const userid = useParams();
+    console.log('user id: ', userid);
     const [allFieldsSet, setAllFieldsSet] = useState(false);
     const [contact, setContact] = useState({});
     const [needsCreated, setNeedsCreated] = useState(false);
@@ -17,7 +18,7 @@ function Contact() {
     */
     console.log('route: ', userid);
     const [formData, setFormData] = useState({
-        userid: userid.userid || '',
+        userid: userid || '',
         petname: '',
         firstname: '',
         lastname: '',
@@ -44,12 +45,12 @@ function Contact() {
           } 
       }, [update, userid]);*/
 
-    useEffect(() => {
-        if (userid) {
+    useMemo(() => {
+        if (userid && !contact) {
             try {
                 getContact(userid)
                     .then(res => {
-                        console.log(res);
+                        console.log('get contact response: ', res);
                         if (!res.data.userid) {
                             setNeedsCreated(true);
                         } else if (res.data.userid) {
@@ -62,7 +63,7 @@ function Contact() {
             }
         }
 
-    }, [contact, userid]);
+    }, [formData, userid]);
 
     const handleChange = (e) => {
         setFormData({
@@ -71,7 +72,7 @@ function Contact() {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!isEmpty(formData.userid)
             && !isEmpty(formData.firstname)
@@ -85,13 +86,10 @@ function Contact() {
             console.log('request', request);
             if (update) {
                 try {
-                    updateContact(formData)
-                        .then(res => {
-                            console.log(res);
-                            if (res?.Updated === true) {
-                                setIsUpdated(true);
-                            }
-                        });
+                    const updateResponse = await updateContact(formData);
+                    if (updateResponse.success) {
+                        setIsUpdated(true);
+                    }
                 } catch (err) {
                     console.log(err);
                 }

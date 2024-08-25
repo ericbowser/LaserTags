@@ -13,7 +13,7 @@ services:
       context: .
     environment:
       NODE_ENV: production
-      HOST: 169.254.123.199
+      HOST: 10.14.176.136
     ports:
       - 31666:31666
 

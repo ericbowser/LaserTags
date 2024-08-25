@@ -19,8 +19,7 @@ const getContact = async (body = {}) => {
 const updateContact = async (body = {}) => {
     console.log('body sending... ', body);
     const contact = await axios.post('http://localhost:32636/updateContact', body);
-    console.log('contact: ', contact);
-    return contact;
+    return contact && contact.rowCount > 0;
 }
 
 async function login(body = {}) {

@@ -7,7 +7,6 @@ import {
 } from "react-router-dom";
 import Login from "./components/Login";
 import Contact from "./components/Contact";
-import App from "./App";
 import './output.css';
 
 const router = createBrowserRouter([
