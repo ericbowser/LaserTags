@@ -1,32 +1,69 @@
 ﻿import axios from "axios";
+import {configDotenv} from "dotenv";
 
-const saveTagInformation = (body = {}) => {
+const config = configDotenv();
+
+async function saveContact(body = {}) {
     console.log('body sending... ', body);
-    return axios.post('http://localhost:32636/saveContact', body)
-        .then(res => {
-            console.log('save tag information response: ', res.data);
-            return res.data;
-        })
+    try {
+        const response = await axios.post(config.parsed.SAVE_CONTACT_URL, body);
+        if (response.data) {
+            console.log('response.data: ', response.data);
+            return response.data;
+        } else {
+            console.error('failed to save contact', response);
+            return response;
+        }
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
 }
 
-const getContact = async (body = {}) => {
-    console.log('body sending... ', body);
-    const contact = await axios.post('http://localhost:32636/getContact', body);
-    console.log('contact: ', contact);
-    return contact;
+const getContact = async (userid = '') => {
+    console.log('body id: ', userid);
+    try {
+        const url = `${config.parsed.GET_CONTACT_URL}${userid}`
+        const contact = await axios.get(url);
+        if (contact.data.exists) {
+            return {...contact, exists: true};
+        } else {
+            return contact;
+        }
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
 }
 
 const updateContact = async (body = {}) => {
     console.log('body sending... ', body);
-    const contact = await axios.post('http://localhost:32636/updateContact', body);
-    return contact && contact.rowCount > 0;
+    try {
+        const contact = 
+            await axios.post(config.parsed.UPDATE_CONTACT_URL, body);
+        
+        return contact.data?.contactUpdated || null;
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
 }
 
 async function login(body = {}) {
     console.log('Login:  ', body);
-    const user = await axios.post('http://localhost:32636/login', body);
-    console.log(user?.data.userid);
-    return user.data?.userid;
+    try {
+        const user = 
+            await axios.post(config.parsed.LOGIN_URL, body);
+        console.log('user id: ', user.data.userid);
+        if (user.data.userid && user.data.firstname && user.data.petname) {
+            return {...user.data, exists: true};
+        } else {
+            return user.data.userid || null;
+        }
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
 }
 
-export {saveTagInformation, getContact, login, updateContact};
+export {saveContact, getContact, login, updateContact};

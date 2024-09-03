@@ -33,19 +33,13 @@ module.exports = {
             }
         ]
     },
-   /* resolve: {
+    resolve: {
         fallback: {
-            crypto: require.resolve("crypto-browserify"),
-            vm: require.resolve("vm-browserify"),
-            path: require.resolve("path-browserify"),
-            https: require.resolve("https-browserify"),
-            url: require.resolve("url"),
-            assert: require.resolve("assert"),
-            http: require.resolve("stream-http"),
-            stream: require.resolve("stream-browserify")
+            os: false,
+            fs: false,
+            path: false,
         },
-        extensions: [".jsx", ".js"]
-    },*/
+    },
     plugins: [
         new HtmlWebpackPlugin({
             template: './public/index.html',

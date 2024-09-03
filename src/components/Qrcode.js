@@ -1,13 +1,12 @@
 ﻿import QRCode from 'qrcode.react';
 import React, {useEffect, useState} from 'react';
-import saveTagInformation from '../api/tagApi';
+import saveContact from '../api/tagApi';
 
 const QrcodeData = (userid) => {
     const [savedUrl, setSavedUrl] = useState(null);
     
     async function getUrl() {
         try {
-            console.log(userid);
             if(userid) {
                 console.log('returned url: ', userid);
                 setSavedUrl(`http://localhost:31666/${userid}`);

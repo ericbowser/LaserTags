@@ -1,24 +1,23 @@
 ﻿import React, {useEffect, useMemo, useState} from 'react';
-import {getContact, saveTagInformation, updateContact} from "../api/tagApi";
+import {getContact, saveContact, updateContact} from "../api/tagApi";
 import {isEmpty} from "lodash";
 import QrcodeData from "./Qrcode";
 import {useParams} from 'react-router-dom';
 
 function Contact() {
-    const userid = useParams();
+    const {userid} = useParams();
     console.log('user id: ', userid);
     const [allFieldsSet, setAllFieldsSet] = useState(false);
-    const [contact, setContact] = useState({});
-    const [needsCreated, setNeedsCreated] = useState(false);
+    const [needsCreated, setNeedsCreated] = useState(null);
     const [saved, setSaved] = useState(false);
     const [update, setUpdate] = useState(false);
     const [isUpdated, setIsUpdated] = useState(false);
+    const [userId, setUserId] = useState(userid);
     /*
         const {userid} = useParams();
     */
     console.log('route: ', userid);
     const [formData, setFormData] = useState({
-        userid: userid || '',
         petname: '',
         firstname: '',
         lastname: '',
@@ -26,44 +25,35 @@ function Contact() {
         address: '',
     });
 
+    const checkFormData = () => {
+        const exists = Boolean(formData.address !== ''
+            && formData.firstname !== ''
+            && formData.lastname !== ''
+            && formData.phone !== '');
+        return exists;
+    }
+
+    useEffect(() => {
+        const formData = checkFormData();
+        if (!formData && userId && !needsCreated) {
+            getContact(userId)
+                .then(response => {
+                    console.log('get contact response: ', response);
+                    if (!response.data.exists) {
+                        setNeedsCreated(true);
+                        setUserId(response.data.userid);
+                    } else if (response.data.exists) {
+                        setNeedsCreated(false);
+                        setFormData(response.data.contact);
+                        setUserId(response.data.userid);
+                        setUpdate(true);
+                    }
+                })
+        }
+    }, [userId, formData]);
+
     useEffect(() => {
     }, [formData, allFieldsSet, saved, needsCreated, update, isUpdated]);
-
-    /*  useEffect(() => {
-          if (userid && update) {
-              try {
-                  updateContact(formData)
-                      .then(res => {
-                          console.log(res);
-                          if (res?.Updated === true) {
-                              setIsUpdated(true);
-                          }
-                      });
-              } catch (err) {
-                  console.log(err);
-              }
-          } 
-      }, [update, userid]);*/
-
-    useMemo(() => {
-        if (userid && !contact) {
-            try {
-                getContact(userid)
-                    .then(res => {
-                        console.log('get contact response: ', res);
-                        if (!res.data.userid) {
-                            setNeedsCreated(true);
-                        } else if (res.data.userid) {
-                            setFormData(res.data);
-                            setUpdate(true);
-                        }
-                    });
-            } catch (err) {
-                console.log(err);
-            }
-        }
-
-    }, [formData, userid]);
 
     const handleChange = (e) => {
         setFormData({
@@ -74,30 +64,31 @@ function Contact() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!isEmpty(formData.userid)
+        if (!isEmpty(userId)
             && !isEmpty(formData.firstname)
             && !isEmpty(formData.petname)
             && (!isEmpty(formData.phone) && !isEmpty(formData.address))
         ) {
             const request = {
-                userid: formData.userid,
+                userid: userId,
                 ...formData
             };
             console.log('request', request);
             if (update) {
                 try {
                     const updateResponse = await updateContact(formData);
-                    if (updateResponse.success) {
+                    if (updateResponse) {
                         setIsUpdated(true);
                     }
                 } catch (err) {
                     console.log(err);
                 }
             } else if (!update) {
-                saveTagInformation(request)
+                saveContact(request)
                     .then(res => {
-                        console.log(res);
+                        console.log('Saved Response: ', res);
                         setSaved(true);
+                        setUserId(res.userid);
                     }).catch(err => console.error(err));
             }
         } else {
@@ -156,7 +147,7 @@ function Contact() {
                     <div>
                         <label className="block text-gray-700">Phone</label>
                         <input
-                            type="text"
+                            type="phone"
                             name="phone"
                             required={true}
                             value={formData.phone}
@@ -184,7 +175,6 @@ function Contact() {
             }
         </div>
     )
-        ;
 }
 
 export default Contact;
