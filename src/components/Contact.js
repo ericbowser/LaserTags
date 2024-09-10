@@ -1,4 +1,4 @@
-﻿import React, {useEffect, useMemo, useState} from 'react';
+﻿import React, {useEffect, useState} from 'react';
 import {getContact, saveContact, updateContact} from "../api/tagApi";
 import {isEmpty} from "lodash";
 import QrcodeData from "./Qrcode";
@@ -12,11 +12,11 @@ function Contact() {
     const [saved, setSaved] = useState(false);
     const [update, setUpdate] = useState(false);
     const [isUpdated, setIsUpdated] = useState(false);
-    const [userId, setUserId] = useState(userid);
+    const [userId, setUserId] = useState(userid.toString());
     /*
         const {userid} = useParams();
     */
-    console.log('route: ', userid);
+    console.log('User Id ', userId);
     const [formData, setFormData] = useState({
         petname: '',
         firstname: '',
@@ -35,25 +35,24 @@ function Contact() {
 
     useEffect(() => {
         const formData = checkFormData();
-        if (!formData && userId && !needsCreated) {
+        if (!formData && userId) {
             getContact(userId)
                 .then(response => {
                     console.log('get contact response: ', response);
-                    if (!response.data.exists) {
+                    if (response.status === 204) {
                         setNeedsCreated(true);
-                        setUserId(response.data.userid);
-                    } else if (response.data.exists) {
+                    } else if(response.status === 201){
                         setNeedsCreated(false);
-                        setFormData(response.data.contact);
+                        setFormData(response.data);
                         setUserId(response.data.userid);
                         setUpdate(true);
                     }
                 })
         }
-    }, [userId, formData]);
+    }, [userId, formData, needsCreated]);
 
     useEffect(() => {
-    }, [formData, allFieldsSet, saved, needsCreated, update, isUpdated]);
+    }, [formData, allFieldsSet, saved, needsCreated, update, isUpdated, userId]);
 
     const handleChange = (e) => {
         setFormData({

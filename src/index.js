@@ -8,6 +8,7 @@ import {
 import Login from "./components/Login";
 import Contact from "./components/Contact";
 import './output.css';
+import StripePayment from "./components/StripePayment";
 
 const router = createBrowserRouter([
     {
@@ -21,8 +22,14 @@ const router = createBrowserRouter([
         element: (
             <Contact />
         )
+    },
+    {
+        path: '/payment/:userid',
+        element: (
+            <StripePayment/>
+        )
     }
 ])
 
-createRoot(document.getElementById('root') )
-    .render(<RouterProvider router={router} />);
+createRoot(document.getElementById('root'))
+    .render( <RouterProvider router={router} /> )

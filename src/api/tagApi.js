@@ -1,12 +1,9 @@
-﻿import axios from "axios";
-import {configDotenv} from "dotenv";
-
-const config = configDotenv();
+﻿import axios from 'axios';
 
 async function saveContact(body = {}) {
     console.log('body sending... ', body);
     try {
-        const response = await axios.post(config.parsed.SAVE_CONTACT_URL, body);
+        const response = await axios.post('http://localhost:32636/saveContact', body);
         if (response.data) {
             console.log('response.data: ', response.data);
             return response.data;
@@ -20,15 +17,30 @@ async function saveContact(body = {}) {
     }
 }
 
-const getContact = async (userid = '') => {
+const getContact = async (userid = null) => {
     console.log('body id: ', userid);
     try {
-        const url = `${config.parsed.GET_CONTACT_URL}${userid}`
+        const url = `http://localhost:32636/getContact/${userid}`;
+        let data = {};
         const contact = await axios.get(url);
-        if (contact.data.exists) {
-            return {...contact, exists: true};
+        if (contact.status === 204) {
+            console.log('contact not created: ', contact);
+            data = {
+                status: contact.status,
+                userid: userid,
+                exists: false
+            };
+            return {...data};
         } else {
-            return contact;
+            console.log('contact exists or was created: ', contact.data);
+            data = {
+                status: contact.status,
+                userid: userid,
+                exists: true,
+                data: contact.data
+            };
+            
+            return {...data};
         }
     } catch (error) {
         console.error(error);
@@ -40,7 +52,7 @@ const updateContact = async (body = {}) => {
     console.log('body sending... ', body);
     try {
         const contact = 
-            await axios.post(config.parsed.UPDATE_CONTACT_URL, body);
+            await axios.post('http://localhost:32636/updateContact', body);
         
         return contact.data?.contactUpdated || null;
     } catch (error) {
@@ -53,12 +65,12 @@ async function login(body = {}) {
     console.log('Login:  ', body);
     try {
         const user = 
-            await axios.post(config.parsed.LOGIN_URL, body);
-        console.log('user id: ', user.data.userid);
-        if (user.data.userid && user.data.firstname && user.data.petname) {
-            return {...user.data, exists: true};
+            await axios.post('http://localhost:32636/login', body);
+        if (user.data) {
+            console.log('user id: ', user.data.userid);
+            return user.data;
         } else {
-            return user.data.userid || null;
+            return null;
         }
     } catch (error) {
         console.error(error);

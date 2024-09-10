@@ -1,8 +1,11 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const config = require('dotenv').config();
 const webpack = require('webpack');
 const Dotenv = require('dotenv-webpack');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+dotenv.config();
 
 console.log('Node env: ', process.env.NODE_ENV);
 console.log('Hosted port: ', process.env.PORT);
@@ -14,10 +17,11 @@ module.exports = {
         login: './src/components/Login.js',
         contact: './src/components/Contact.js',
         qrcode: './src/components/Qrcode.js',
+        vendor: ['react', 'react-dom'],
     },
-    mode: process.env.NODE_ENV,
     output: {
-        filename: '[name].bundle.js',
+        filename: '[name].[contenthash].js',
+        chunkFilename: '[name].[contenthash].bundle.js',
         path: path.resolve(__dirname, 'build')
     },
     module: {
@@ -30,14 +34,39 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: ['style-loader', 'css-loader', 'postcss-loader']
-            }
+            },
+            {
+                test: /\.(png|jpe?g|gif|svg)$/i,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {
+                            name: '[path][name].[ext]',
+                        },
+                    },
+                ],
+            },
         ]
     },
+    stats: {
+        errorDetails: true,
+        warnings: true
+    },
+    devServer: {
+        historyApiFallback: true,
+        open: true,
+        port: process.env.PORT,
+        host: process.env.HOST
+    },
+    mode: process.env.NODE_ENV || 'development',
     resolve: {
+        extensions: ['.js',  '.json'],
         fallback: {
-            os: false,
-            fs: false,
-            path: false,
+           os: false,
+           path: false,
+           crypto: false,
+           stream: false,
+            
         },
     },
     plugins: [
@@ -50,34 +79,21 @@ module.exports = {
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
             'process.env.PORT': JSON.stringify(process.env.PORT),
             'process.env.HOST': JSON.stringify(process.env.HOST),
+/*
+            'process.env.SEND_EMAIL_URL': JSON.stringify(process.env.SEND_EMAIL_URL),
+            'process.env.BASE_URL': JSON.stringify(process.env.BASE_URL),
+            'process.env.SAVE_CONTACT_URL': JSON.stringify(process.env.SAVE_CONTACT_URL),
+*/
         }),
     ],
-    devtool: 'eval-source-map',
-    devServer: {
-        static: path.resolve(__dirname, 'public'),
-        compress: true,
-        port: process.env.PORT || 3002,
-        historyApiFallback: true,
-        open: true,
-        host: process.env.HOST
-    },
+    devtool: 'inline-source-map',
     optimization: {
         splitChunks: {
-            chunks: 'all',
-            minSize: 20000,     // Minimum size for a chunk to be generated
-            maxSize: 70000,     // Maximum size for a chunk to be generated
-            minChunks: 1,       // Minimum number of chunks that must share a module before splitting
-            automaticNameDelimiter: '~', // Delimiter for naming chunks
             cacheGroups: {
-                vendors: {
+                vendor: {
                     test: /[\\/]node_modules[\\/]/,
                     name: 'vendors',
-                    chunks: 'all'
-                },
-                default: {
-                    minChunks: 2,
-                    priority: -20,
-                    reuseExistingChunk: true,
+                    chunks: 'all',
                 },
             },
         },
@@ -86,8 +102,8 @@ module.exports = {
         {
             hints: false,
             maxEntrypointSize:
-                412000,
+                312000,
             maxAssetSize:
-                412000,
+                312000,
         },
 };

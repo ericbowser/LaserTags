@@ -3,6 +3,7 @@ import {useNavigate} from 'react-router-dom';
 import {login} from '../api/tagApi';
 import sendEmail from "../api/emailApi";
 import '../output.css';
+import SvgComponent from "./SvgImage";
 
 function Login() {
     const [email, setEmail] = useState(null);
@@ -50,9 +51,9 @@ function Login() {
             password
         };
         const loggedInUser = await login(body)
-        if (loggedInUser) {
+        if (loggedInUser.data) {
             console.log('logged in user: ', loggedInUser);
-            setUserId(loggedInUser);
+            setUserId(loggedInUser.data.userid);
             return loggedInUser;
         }
 
@@ -62,6 +63,12 @@ function Login() {
     };
 
     return (
+/*
+        <div>
+
+            <SvgComponent />
+        </div>
+*/
         <div className="bg-gray-800 min-h-screen flex items-center justify-center">
             <div className="bg-white p-8 rounded-lg w-full max-w-screen-md border-black border-2 shadow-lg shadow-blue-700">
                 <form className="space-y-6 py-8" onSubmit={handleSubmit}>
