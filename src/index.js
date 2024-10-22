@@ -10,9 +10,18 @@ import Contact from "./components/Contact";
 import './output.css';
 import StripePayment from "./components/StripePayment";
 
+const url = window.URL || window.webkitURL;
+console.log('URL: ', url);
+
 const router = createBrowserRouter([
     {
         path: '/',
+        element: (
+            <Login/>
+        )
+    },
+    {
+        path: '/login',
         element: (
             <Login/>
         )

@@ -4,7 +4,7 @@ async function saveContact(body = {}) {
     console.log('body sending... ', body);
     try {
         const response = await axios.post('http://localhost:32636/saveContact', body);
-        if (response.data) {
+        if (response?.user) {
             console.log('response.data: ', response.data);
             return response.data;
         } else {
@@ -23,24 +23,26 @@ const getContact = async (userid = null) => {
         const url = `http://localhost:32636/getContact/${userid}`;
         let data = {};
         const contact = await axios.get(url);
+        console.log('fetched contact: ', contact);
         if (contact.status === 204) {
             console.log('contact not created: ', contact);
             data = {
                 status: contact.status,
-                userid: userid,
+                userid: contact?.data?.userid,
+                contact: contact?.data,
                 exists: false
             };
-            return {...data};
+            return data;
         } else {
             console.log('contact exists or was created: ', contact.data);
             data = {
                 status: contact.status,
                 userid: userid,
+                contact: contact.data,
                 exists: true,
-                data: contact.data
             };
             
-            return {...data};
+            return data;
         }
     } catch (error) {
         console.error(error);

@@ -4,7 +4,7 @@ import {isEmpty} from "lodash";
 import QrcodeData from "./Qrcode";
 import {useParams} from 'react-router-dom';
 
-function Contact() {
+const Contact = () => {
     const {userid} = useParams();
     console.log('user id: ', userid);
     const [allFieldsSet, setAllFieldsSet] = useState(false);
@@ -33,21 +33,33 @@ function Contact() {
         return exists;
     }
 
+    const queryContact = async () => {
+        try {
+            const contact = await getContact(userId)
+            console.log('get contact response: ', contact);
+            if (contact) {
+               return contact; 
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    
+    function setCurrentContact(contact) {
+        if (contact.status === 204) {
+            setNeedsCreated(true);
+        } else if (contact.status === 201) {
+            setNeedsCreated(false);
+            setFormData(contact.data.contact);
+            setUserId(contact.data.userid);
+            setUpdate(true);
+        }
+    }
+
     useEffect(() => {
         const formData = checkFormData();
         if (!formData && userId) {
-            getContact(userId)
-                .then(response => {
-                    console.log('get contact response: ', response);
-                    if (response.status === 204) {
-                        setNeedsCreated(true);
-                    } else if(response.status === 201){
-                        setNeedsCreated(false);
-                        setFormData(response.data);
-                        setUserId(response.data.userid);
-                        setUpdate(true);
-                    }
-                })
+            queryContact().then(r => setCurrentContact(r));
         }
     }, [userId, formData, needsCreated]);
 
@@ -94,7 +106,6 @@ function Contact() {
             setAllFieldsSet(false);
         }
     };
-
 
     return (
         <div className="flex items-center justify-center pt-5">

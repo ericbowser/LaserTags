@@ -51,9 +51,10 @@ function Login() {
             password
         };
         const loggedInUser = await login(body)
-        if (loggedInUser.data) {
-            console.log('logged in user: ', loggedInUser);
-            setUserId(loggedInUser.data.userid);
+        const user = loggedInUser?.user;
+        if (user) {
+            console.log('logged in user: ', user);
+            setUserId(user.userid);
             return loggedInUser;
         }
 

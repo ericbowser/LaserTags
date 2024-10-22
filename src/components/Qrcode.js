@@ -7,7 +7,7 @@ const QrcodeData = (userid) => {
     
     async function getUrl() {
         try {
-            if(userid) {
+            if(userid) {y
                 console.log('returned url: ', userid);
                 setSavedUrl(`http://localhost:31666/${userid}`);
             }
