@@ -53,6 +53,7 @@ const Contact = () => {
             setFormData(contact.data.contact);
             setUserId(contact.data.userid);
             setUpdate(true);
+            console.log('set user id: ', contact.data.userid);
         }
     }
 

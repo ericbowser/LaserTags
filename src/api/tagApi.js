@@ -66,11 +66,12 @@ const updateContact = async (body = {}) => {
 async function login(body = {}) {
     console.log('Login:  ', body);
     try {
-        const user = 
-            await axios.post('http://localhost:32636/login', body);
-        if (user.data) {
-            console.log('user id: ', user.data.userid);
-            return user.data;
+        const user = await axios.post('http://localhost:32636/login', body);
+        console.log('user: ', user);
+        
+        if (user.data.data) {
+            console.log('user id: ', user.data.data.userid);
+            return user.data.data.userid;
         } else {
             return null;
         }

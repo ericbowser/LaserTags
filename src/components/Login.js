@@ -44,17 +44,16 @@ function Login() {
         setPassword(e.target.value);
     };
     
-    const handleSubmit = async (e) => {
+    async function handleSubmit(e)  {
         e.preventDefault();
         const body = {
             email,
             password
         };
         const loggedInUser = await login(body)
-        const user = loggedInUser?.user;
-        if (user) {
-            console.log('logged in user: ', user);
-            setUserId(user.userid);
+        if (loggedInUser) {
+            console.log('logged in user: ', loggedInUser);
+            setUserId(loggedInUser);
             return loggedInUser;
         }
 
