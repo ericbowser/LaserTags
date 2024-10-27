@@ -41,4 +41,9 @@ const router = createBrowserRouter([
 ])
 
 createRoot(document.getElementById('root'))
-    .render( <RouterProvider router={router} /> )
+    .render(
+        <div className={'bg-gray-800'}>
+            <RouterProvider router={router} />
+
+        </div>
+    )

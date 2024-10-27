@@ -69,7 +69,7 @@ function Login() {
             <SvgComponent />
         </div>
 */
-        <div className="bg-gray-800 min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center">
             <div className="bg-white p-8 rounded-lg w-full max-w-screen-md border-black border-2 shadow-lg shadow-blue-700">
                 <form className="space-y-6 py-8" onSubmit={handleSubmit}>
                     <div className="flex items-center space-x-4">

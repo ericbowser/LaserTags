@@ -22,7 +22,8 @@ module.exports = {
     output: {
         filename: '[name].[contenthash].js',
         chunkFilename: '[name].[contenthash].bundle.js',
-        path: path.resolve(__dirname, 'build')
+        path: path.resolve(__dirname, 'build'),
+        publicPath: '/',
     },
     module: {
         rules: [
@@ -54,9 +55,9 @@ module.exports = {
     },
     devServer: {
         historyApiFallback: true,
-        open: true,
         port: process.env.PORT,
-        host: process.env.HOST
+        host: process.env.HOST,
+        hot: true
     },
     mode: process.env.NODE_ENV || 'development',
     resolve: {
@@ -85,15 +86,27 @@ module.exports = {
             'process.env.SAVE_CONTACT_URL': JSON.stringify(process.env.SAVE_CONTACT_URL),
 */
         }),
+        new webpack.HotModuleReplacementPlugin(),
     ],
     devtool: 'eval-source-map',
     optimization: {
         splitChunks: {
+            chunks: 'all',
             cacheGroups: {
-                vendor: {
+                default: false,
+                vendors: {
                     test: /[\\/]node_modules[\\/]/,
                     name: 'vendors',
                     chunks: 'all',
+                    enforce: true,
+                },
+                common: {
+                    name: 'common',
+                    minChunks: 2,
+                    chunks: 'async',
+                    priority: 10,
+                    reuseExistingChunk: true,
+                    enforce: true,
                 },
             },
         },

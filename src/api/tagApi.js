@@ -28,12 +28,10 @@ const getContact = async (userid = null) => {
             console.log('contact not created: ', contact);
             data = {
                 status: contact.status,
-                userid: contact?.data?.userid,
-                contact: contact?.data,
                 exists: false
             };
             return data;
-        } else {
+        } else if(contact.status === 201) {
             console.log('contact exists or was created: ', contact.data);
             data = {
                 status: contact.status,
@@ -43,6 +41,9 @@ const getContact = async (userid = null) => {
             };
             
             return data;
+        } else {
+            console.error('contact issue: ', contact);
+            return contact;
         }
     } catch (error) {
         console.error(error);

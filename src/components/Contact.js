@@ -12,10 +12,8 @@ const Contact = () => {
     const [saved, setSaved] = useState(false);
     const [update, setUpdate] = useState(false);
     const [isUpdated, setIsUpdated] = useState(false);
-    const [userId, setUserId] = useState(userid.toString());
-    /*
-        const {userid} = useParams();
-    */
+    const [userId, setUserId] = useState(userid.toString() || null);
+
     console.log('User Id ', userId);
     const [formData, setFormData] = useState({
         petname: '',
@@ -38,29 +36,33 @@ const Contact = () => {
             const contact = await getContact(userId)
             console.log('get contact response: ', contact);
             if (contact) {
-               return contact; 
+                return contact;
             }
         } catch (err) {
             console.error(err);
         }
     }
-    
+
     function setCurrentContact(contact) {
-        if (contact.status === 204) {
-            setNeedsCreated(true);
-        } else if (contact.status === 201) {
-            setNeedsCreated(false);
-            setFormData(contact.data.contact);
-            setUserId(contact.data.userid);
-            setUpdate(true);
-            console.log('set user id: ', contact.data.userid);
-        }
+        setNeedsCreated(false);
+        setFormData(contact.contact);
+        setUserId(contact.contact.userid);
+        setUpdate(true);
+        console.log('set user id: ', contact.contact.userid);
     }
 
     useEffect(() => {
         const formData = checkFormData();
-        if (!formData && userId) {
-            queryContact().then(r => setCurrentContact(r));
+        if (!formData && userId && !needsCreated) {
+            queryContact()
+                .then(contact => {
+                    if (contact.status === 204) {
+                        setNeedsCreated(true);
+                    } else if (contact.status === 201) {
+                        const contactData = contact.contact;
+                        setCurrentContact(contactData)
+                    }
+                });
         }
     }, [userId, formData, needsCreated]);
 
@@ -109,10 +111,11 @@ const Contact = () => {
     };
 
     return (
-        <div className="flex items-center justify-center pt-5">
-            <div className="p-6 max-w-md w-full bg-white rounded-md shadow-lime-500">
-                <h1 className="text-2xl text-red-600 font-bold mb-8">Dog Tag QR Generator</h1>
-                <form onSubmit={handleSubmit}>
+        <div>
+            <div>
+                <h1 className="text-2xl text-white font-bold mb-8">Dog Tag QR Generator</h1>
+                <form className={'text-white bg-gray-700'}
+                    onSubmit={handleSubmit}>
                     <div>
                         <label className="block text-gray-700">Pet Name</label>
                         <input
