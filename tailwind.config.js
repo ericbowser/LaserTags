@@ -7,7 +7,11 @@ module.exports = {
         './src/components/*.js',
     ],
     theme: {
-        extend: {},
+        extend: {
+            backgroundImage: {
+                'back': "url('/src/assets/circle-scatter-haikei.svg')",
+            },
+        },
     },
     plugins: [
         require('tailwindcss'),

@@ -17,6 +17,7 @@ module.exports = {
         login: './src/components/Login.js',
         contact: './src/components/Contact.js',
         qrcode: './src/components/Qrcode.js',
+        stripe: './src/components/StripePayment.js',
         vendor: ['react', 'react-dom'],
     },
     output: {

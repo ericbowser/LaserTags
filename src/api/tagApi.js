@@ -70,9 +70,9 @@ async function login(body = {}) {
         const user = await axios.post('http://localhost:32636/login', body);
         console.log('user: ', user);
         
-        if (user.data.data) {
-            console.log('user id: ', user.data.data.userid);
-            return user.data.data.userid;
+        if (user.data) {
+            console.log('user id: ', user.data.userid);
+            return user.data.userid;
         } else {
             return null;
         }
