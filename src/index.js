@@ -5,7 +5,7 @@ import {createBrowserRouter, RouterProvider,} from "react-router-dom";
 import Login from "./components/Login";
 import Contact from "./components/Contact";
 import StripePayment from "./components/StripePayment";
-import SvgComponent from "./components/SvgBackground";
+import SvgBackground from "./components/SvgBackground";
 
 const url = window.URL || window.webkitURL;
 console.log('URL: ', url);
@@ -14,24 +14,21 @@ const router = createBrowserRouter([
   {
     path: '/',
     element: (
-      <Login/>
+      <SvgBackground children={<Login/>}/>
     )
   },
   {
     path: '/login',
     element: (
-      <SvgComponent>
+      <SvgBackground>
         <Login/>
-      </SvgComponent>
+      </SvgBackground>
     )
   },
   {
     path: '/contact/:userid',
     element: (
-      <SvgComponent>
-        <Contact/>
-
-      </SvgComponent>
+      <SvgBackground children={<Contact/>}/>
     )
   },
   {

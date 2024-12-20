@@ -7,14 +7,17 @@ function SvgBackground({children}) {
 
   useEffect(() => {
     const draw = SVG().addTo(svgRef.current).size('100vw', '100vh');
+    draw.position = 'relative';
 
     // Import high-resolution image
-    const image = draw.image(back).size(2560, 1440);
+    const image = draw.image(back).size(draw.image.width, draw.image.height);
   }, []);
 
   return (
-    <div ref={svgRef} >
-      {children}
+    <div ref={svgRef} style={{position: 'relative', width: '100wh', height: '100vh'}}>
+      <div style={{position: 'absolute', top: 0, left: 0, width: '100wh', height: '100vh'}}>
+        {children}
+      </div>
     </div>
   );
 }
