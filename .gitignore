@@ -1,5 +1,6 @@
 
-.env*
+.env
+.env.me
 .flaskenv*
 !.env.project
 !.env.vault
@@ -9,3 +10,8 @@ build/
 
 .idea/.codiumai
 .codiumai
+.idea/
+
+
+
+.env*

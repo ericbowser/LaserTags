@@ -4,8 +4,10 @@ import {login} from '../api/tagApi';
 import sendEmail from "../api/emailApi";
 import '../output.css';
 import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
+import FormControl from "react-bootstrap/FormControl";
+import FormLabel from "react-bootstrap/FormLabel";
 import Container from "react-bootstrap/Container";
+import Button from "react-bootstrap/Button";
 
 function Login() {
   const [email, setEmail] = useState(null);
@@ -62,43 +64,43 @@ function Login() {
     console.log(loggedInUser);
     setSpinner(false);
     return null;
-  };
+  }
 
   return (
-    <Container >
-    <Form onSubmit={handleSubmit}>
-      <Form.Label>
-        Email
-      </Form.Label>
-      <Form.Control
-        onChange={handleUsernameChange}
-        as="input"
-        type="email"
-        id="email"
-        required
-      />
-      <Form.Label>
-        Password
-      </Form.Label>
-      <Form.Control
-        onChange={handlePasswordChange}
-        as="input"
-        type="password"
-        id="password"
-        required
-      />
-      <Button
-        type="submit"
-        disabled={!email || !password || email.trim() === '' || password.trim() === ''}
-        className={`align-middle p-2 mr-2 flex justify-center border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-          !email || !password || email.trim() === '' || password.trim() === ''
-            ? 'opacity-50 cursor-not-allowed'
-            : ''
-        }`}
-      >
-        Sign In
-      </Button>
-    </Form>
+    <Container className={'m-52 p-4 text-white bolder bg-black border-2 backdrop-contrast-75'}>
+      <Form onSubmit={handleSubmit}>
+        <FormLabel>
+          Email
+        </FormLabel>
+        <FormControl
+          onChange={handleUsernameChange}
+          as="input"
+          type="email"
+          id="email"
+          required
+        />
+        <FormLabel>
+          Password
+        </FormLabel>
+        <FormControl
+          onChange={handlePasswordChange}
+          as="input"
+          type="password"
+          id="password"
+          required
+        />
+        <Button
+          type="submit"
+          disabled={!email || !password || email.trim() === '' || password.trim() === ''}
+          className={` mt-4 align-middle p-2 mr-2 flex justify-center border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+            !email || !password || email.trim() === '' || password.trim() === ''
+              ? 'opacity-50 cursor-not-allowed'
+              : ''
+          }`}
+        >
+          Sign In
+        </Button>
+      </Form>
     </Container>
   );
 }

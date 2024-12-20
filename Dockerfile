@@ -23,4 +23,4 @@ ENV HOST=localhost
 EXPOSE 31666
 
 # Command to run the application
-CMD ["sh", "-c", "npx react-scripts start --port $PORT"]
+CMD ["npm", "run", "dev"]

@@ -1,10 +1,15 @@
-﻿import React, {useEffect, useState} from 'react';
+﻿import React, {useEffect, useMemo, useState} from 'react';
 import {getContact, saveContact, updateContact} from "../api/tagApi";
 import {isEmpty} from "lodash";
 import QrcodeData from "./Qrcode";
 import {useParams} from 'react-router-dom';
+import Form from "react-bootstrap/Form";
+import FormControl from "react-bootstrap/FormControl";
+import FloatingLabel from "react-bootstrap/FloatingLabel";
+import FormGroup from "react-bootstrap/FormGroup";
+import FormLabel from "react-bootstrap/FormLabel";
 import Container from "react-bootstrap/Container";
-import {Form} from "react-bootstrap";
+import Button from "react-bootstrap/Button";
 
 const Contact = () => {
   const {userid} = useParams();
@@ -36,12 +41,13 @@ const Contact = () => {
   const queryContact = async () => {
     try {
       const contact = await getContact(userId)
-      console.log('get contact response: ', contact);
       if (contact) {
+        setCurrentContact(contact);
         return contact;
       }
     } catch (err) {
       console.error(err);
+      return null;
     }
   }
 
@@ -53,20 +59,25 @@ const Contact = () => {
     console.log('set user id: ', contact.contact.userid);
   }
 
-  useEffect(() => {
-    const formData = checkFormData();
-    if (!formData && userId && !needsCreated) {
-      queryContact()
-        .then(contact => {
-          if (contact.status === 204) {
-            setNeedsCreated(true);
-          } else if (contact.status === 201) {
-            const contactData = contact.contact;
-            setCurrentContact(contactData)
-          }
-        });
+  const queryContactInfo = async () => {
+    const contact = await queryContact();
+    if (contact) {
+      setNeedsCreated(false);
+      setCurrentContact(contact.contact);
+    } else {
+      setNeedsCreated(true);
+      setCurrentContact(null);
     }
-  }, [userId, formData, needsCreated]);
+
+    return contact;
+  }
+
+  useMemo(() => {
+    const formData = checkFormData();
+    if (!formData && userId) {
+      queryContactInfo().then(contact => console.log('contact: ', contact));
+    }
+  }, [userId, formData]);
 
   useEffect(() => {
   }, [formData, allFieldsSet, saved, needsCreated, update, isUpdated, userId]);
@@ -113,13 +124,13 @@ const Contact = () => {
   };
 
   return (
-    <Container>
-      <Form.FloatingLabel>Dog Tag QR Generator</Form.FloatingLabel>
+    <Container className={'text-center'}>
+      <FloatingLabel>Dog Tag QR Generator</FloatingLabel>
       <Form className={'text-white'}
             onSubmit={handleSubmit}>
-        <Form.Group>
-          <Form.Label>Pet Name</Form.Label>
-          <Form.Control
+        <FormGroup>
+          <FormLabel>Pet Name</FormLabel>
+          <FormControl
             type="text"
             as="input"
             name="petname"
@@ -127,8 +138,8 @@ const Contact = () => {
             value={formData.petname}
             onChange={handleChange}
           />
-          <Form.Label>First Name</Form.Label>
-          <Form.Control
+          <FormLabel>First Name</FormLabel>
+          <FormControl
             required={true}
             type="text"
             as="input"
@@ -136,24 +147,24 @@ const Contact = () => {
             value={formData.firstname}
             onChange={handleChange}
           />
-          <Form.Label>Last Name</Form.Label>
-          <Form.Control
+          <FormLabel>Last Name</FormLabel>
+          <FormControl
             type="text"
             as="input"
             name="lastname"
             value={formData.lastname}
             onChange={handleChange}
           />
-          <Form.Label>Address</Form.Label>
-          <Form.Control
+          <FormLabel>Address</FormLabel>
+          <FormControl
             type="text"
             as="input"
             name="address"
             value={formData.address}
             onChange={handleChange}
           />
-          <Form.Label>Phone</Form.Label>
-          <Form.Control
+          <FormLabel>Phone</FormLabel>
+          <FormControl
             type="phone"
             as="input"
             name="phone"
@@ -161,13 +172,13 @@ const Contact = () => {
             value={formData.phone}
             onChange={handleChange}
           />
-        </Form.Group>
-        <button
+        </FormGroup>
+        <Button
           type="submit"
-          className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md"
+          variant={'primary'}
         >
           {update === true ? 'Update' : 'Create Contact Info'}
-        </button>
+        </Button>
       </Form>
       {
         saved &&
