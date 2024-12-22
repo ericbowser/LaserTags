@@ -6,7 +6,6 @@ const dotenv = require('dotenv');
 
 // Load environment variables from .env file
 const config = dotenv.config();
-console.log(config);
 
 console.log('Node env: ', process.env.NODE_ENV);
 console.log('Hosted port: ', process.env.PORT);
