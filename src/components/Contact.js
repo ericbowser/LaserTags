@@ -1,7 +1,6 @@
-﻿import React, {useEffect, useMemo, useState} from 'react';
+﻿import React, {useEffect, useState} from 'react';
 import {getContact, saveContact, updateContact} from "../api/tagApi";
 import {isEmpty} from "lodash";
-import QrcodeData from "./Qrcode";
 import {useParams} from 'react-router-dom';
 import Form from "react-bootstrap/Form";
 import FormControl from "react-bootstrap/FormControl";
@@ -10,18 +9,24 @@ import FormGroup from "react-bootstrap/FormGroup";
 import FormLabel from "react-bootstrap/FormLabel";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
+import { useNavigate } from 'react-router-dom';
 
 const Contact = () => {
+  const navigate = useNavigate();
   const {userid} = useParams();
-  console.log('user id: ', userid);
-  const [allFieldsSet, setAllFieldsSet] = useState(false);
+
   const [needsCreated, setNeedsCreated] = useState(null);
+  const [contact, setContact] = useState(null);
+  const [contactFetched, setContactFetched] = useState(false);
+
+  const [navigateProfile, setNavigateProfile] = useState(false);
+  const [allFieldsSet, setAllFieldsSet] = useState(false);
   const [saved, setSaved] = useState(false);
   const [update, setUpdate] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
-  const [userId, setUserId] = useState(userid.toString() || null);
+  const [userId, setUserId] = useState(userid || null);
+  const [initialFetch, setInitialFetch] = useState(null);
 
-  console.log('User Id ', userId);
   const [formData, setFormData] = useState({
     petname: '',
     firstname: '',
@@ -30,19 +35,28 @@ const Contact = () => {
     address: '',
   });
 
+  useEffect(() => {
+    if (navigateProfile) {
+      navigate(`/profile/${userid}`, {state: {userid, contact}});
+    }
+  }, [navigateProfile]);
+
   const checkFormData = () => {
-    const exists = Boolean(formData.address !== ''
+    const exists = Boolean(formData && formData.address !== ''
       && formData.firstname !== ''
       && formData.lastname !== ''
       && formData.phone !== '');
     return exists;
   }
 
-  const queryContact = async () => {
+  async function queryContact() {
     try {
       const contact = await getContact(userId)
-      if (contact) {
+      if (contact.exists) {
         setCurrentContact(contact);
+        return contact;
+      } else {
+        setNeedsCreated(true);
         return contact;
       }
     } catch (err) {
@@ -51,36 +65,45 @@ const Contact = () => {
     }
   }
 
-  function setCurrentContact(contact) {
+  function setCurrentContact(contact, userid = -1) {
     setNeedsCreated(false);
-    setFormData(contact.contact);
-    setUserId(contact.contact.userid);
-    setUpdate(true);
-    console.log('set user id: ', contact.contact.userid);
+    setContact(contact);
+    setFormData(contact);
+    setContactFetched(true);
+    setUserId(userid);
+    console.log('User id after contact set in state: ', userid);
   }
 
-  const queryContactInfo = async () => {
-    const contact = await queryContact();
-    if (contact) {
+  async function queryContactInfo() {
+      const contact = await queryContact();
+    if (contact.exists) {
       setNeedsCreated(false);
       setCurrentContact(contact.contact);
     } else {
       setNeedsCreated(true);
-      setCurrentContact(null);
+      setContact(null);
     }
 
     return contact;
   }
 
-  useMemo(() => {
+  useEffect(() => {
     const formData = checkFormData();
-    if (!formData && userId) {
-      queryContactInfo().then(contact => console.log('contact: ', contact));
+    let count;
+    if (!formData && userId && !needsCreated && initialFetch === null) {
+      console.log('count: ', count++);
+      queryContactInfo().then(contact => {
+        console.log('contact: ', contact);
+        setInitialFetch(false);
+      });
     }
-  }, [userId, formData]);
+    if (!needsCreated && initialFetch) {
+      console.log('Contact in session: ', formData)
+    }
+  }, [userId, initialFetch, formData]);
 
   useEffect(() => {
-  }, [formData, allFieldsSet, saved, needsCreated, update, isUpdated, userId]);
+  }, [allFieldsSet, saved, needsCreated, update, isUpdated, userId, initialFetch]);
 
   const handleChange = (e) => {
     setFormData({
@@ -91,8 +114,7 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isEmpty(userId)
-      && !isEmpty(formData.firstname)
+    if ( !isEmpty(formData.firstname)
       && !isEmpty(formData.petname)
       && (!isEmpty(formData.phone) && !isEmpty(formData.address))
     ) {
@@ -110,7 +132,7 @@ const Contact = () => {
         } catch (err) {
           console.log(err);
         }
-      } else if (!update) {
+      } else {
         const contact = await saveContact(request);
         if (contact) {
           console.log('Saved Response: ', contact);
@@ -135,7 +157,7 @@ const Contact = () => {
             as="input"
             name="petname"
             required={true}
-            value={formData.petname}
+            value={formData?.petname}
             onChange={handleChange}
           />
           <FormLabel>First Name</FormLabel>
@@ -144,7 +166,7 @@ const Contact = () => {
             type="text"
             as="input"
             name="firstname"
-            value={formData.firstname}
+            value={formData?.firstname}
             onChange={handleChange}
           />
           <FormLabel>Last Name</FormLabel>
@@ -152,7 +174,7 @@ const Contact = () => {
             type="text"
             as="input"
             name="lastname"
-            value={formData.lastname}
+            value={formData?.lastname}
             onChange={handleChange}
           />
           <FormLabel>Address</FormLabel>
@@ -160,7 +182,7 @@ const Contact = () => {
             type="text"
             as="input"
             name="address"
-            value={formData.address}
+            value={formData?.address}
             onChange={handleChange}
           />
           <FormLabel>Phone</FormLabel>
@@ -169,7 +191,7 @@ const Contact = () => {
             as="input"
             name="phone"
             required={true}
-            value={formData.phone}
+            value={formData?.phone}
             onChange={handleChange}
           />
         </FormGroup>
@@ -177,16 +199,30 @@ const Contact = () => {
           type="submit"
           variant={'primary'}
         >
-          {update === true ? 'Update' : 'Create Contact Info'}
+          <span>
+            {contact !== null
+              ? 'Update Contact'
+              : 'Create Contact'
+            }
+          </span>
         </Button>
+        {contact && userid &&(
+          <Button onClick={() => {
+            setNavigateProfile(true);
+            console.log('set profile navigation: ', true);
+
+          }}>
+          <span>
+            <label>Go to Profile</label>
+          </span>
+          </Button>
+        /*  <Profile
+            contact={contact}
+            userid={userId}
+          />*/
+        )}
+
       </Form>
-      {
-        saved &&
-        <div>
-          <QrcodeData userid={userid}/>
-          <span className={'text-3xl text-green-400'}>Saved!</span>
-        </div>
-      }
       {
         isUpdated &&
         <span className={'text-3xl text-green-400'}>Updated!</span>

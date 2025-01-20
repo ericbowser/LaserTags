@@ -1,5 +1,5 @@
 ﻿import React, {useEffect, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {login} from '../api/tagApi';
 import sendEmail from "../api/emailApi";
 import '../output.css';
@@ -10,6 +10,7 @@ import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
 
 function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState(null);
   const [password, setPassword] = useState(null);
   const [userid, setUserId] = useState(null);
@@ -18,26 +19,16 @@ function Login() {
   const [spinner, setSpinner] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  const navigate = useNavigate();
-
   useEffect(() => {
   }, [email, password, spinner, alreadyHasAccount]);
 
   useEffect(() => {
   }, [email]);
 
-  async function sendTheEmail() {
-    const emailSent = await sendEmail(email);
-    console.log('email sent: ', emailSent);
-    if (emailSent) {
-      setEmailSent(true);
-    }
-    setEmailSent(false);
-  }
 
   useEffect(() => {
     if (userid) {
-      navigate(`/contact/${userid}`)
+      navigate(`/contact/${userid}`);
     }
   }, [userid, isLoggedIn]);
 
@@ -51,7 +42,7 @@ function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     const body = {
-      email,
+      username: email,
       password
     };
     const loggedInUser = await login(body)

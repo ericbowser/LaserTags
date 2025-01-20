@@ -5,7 +5,7 @@ const baseUrl = process.env.LASER_BACKEND_BASE_URL;
 async function saveContact(body = {}) {
   console.log('body sending... ', body);
   try {
-    const response = await axios.post('http://localhost:32636/saveContact', body);
+    const response = await axios.post(`${baseUrl}/saveContact`, body);
     if (response?.user) {
       console.log('response.data: ', response.data);
       return response.data;
@@ -19,38 +19,24 @@ async function saveContact(body = {}) {
   }
 }
 
-const getContact = async (userid = null) => {
+async function getContact(userid = null){
   console.log('body id: ', userid);
   try {
-    const url = `${baseUrl}/getContact/${userid}`;
     let data = {};
-    const contact = await axios.get(url);
-
-
-    switch (contact.exists) {
-      case true:
-        console.log('contact exists: ', contact);
-        data = {
-          status: contact.status,
-          userid: userid,
-          contact: contact.data,
-          exists: true
-        };
-
-        return contact;
-        break;
-      case false:
-        console.log('contact not created: ', contact);
-        data = {
-          status: contact.status,
-          exists: false
-        };
-
-        return data;
-        break;
-      default:
-        return null;
+    const url = `${baseUrl}/getContact/${userid}`;
+    const response = await axios.get(url);
+    if (response.status === 201) {
+      data = {
+        exists: true,
+        contact: response.data.contact
+      };
+    } else if (response.status === 204) {
+      data = {
+        exists: false,
+        contact: null
+      };
     }
+    return data;
   } catch (error) {
     console.error(error);
     return null;

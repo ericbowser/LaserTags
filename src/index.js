@@ -6,6 +6,8 @@ import Login from "./components/Login";
 import Contact from "./components/Contact";
 import StripePayment from "./components/StripePayment";
 import SvgBackground from "./components/SvgBackground";
+import Profile from "./components/Profile";
+
 
 const url = window.URL || window.webkitURL;
 console.log('URL: ', url);
@@ -34,7 +36,17 @@ const router = createBrowserRouter([
   {
     path: '/contact/:userid',
     element: (
-      <Contact/>
+      <SvgBackground >
+        <Contact/>
+      </SvgBackground>
+    )
+  },
+  {
+    path: '/profile/:userid',
+    element: (
+      <SvgBackground >
+        <Profile/>
+      </SvgBackground>
     )
   },
   {
