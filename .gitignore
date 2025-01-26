@@ -15,4 +15,4 @@ build/
 .env.previous
 
 src/output.css
-
+./src/output.css
