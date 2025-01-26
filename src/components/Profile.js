@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {useParams} from 'react-router-dom';
-import {Box, Container, FormControl, InputLabel, MenuItem, Select} from '@mui/material';
+import {Box, Card, FormControl, InputLabel, MenuItem, Select, Container} from '@mui/material';
 import Materials from "../utils/Materials";
+
 const {useLocation} = require("react-router-dom");
 
 const Profile = () => {
@@ -12,7 +13,6 @@ const Profile = () => {
     console.log('no contact found');
     return null;
   }
-  const [profileContact, setProfileContact] = useState(contact);
   const [emailSent, setEmailSent] = useState(null);
   const [material, setMaterial] = useState(null);
   const [contact, setContact] = useState(c);
@@ -25,7 +25,7 @@ const Profile = () => {
     setMaterial(e.target.value);
   }
 
-  function InfoText({ title, text }) {
+  function InfoText({title, text = {}}) {
     return (
       <div className="bg-blue-50 border-l-4 border-blue-400 p-4 my-2">
         {title && (
@@ -47,10 +47,23 @@ const Profile = () => {
     return mapped;
   }
 
+  function formattedContactInfo() {
+    if (!contact) return null;
+    return (
+      <div className={'text-left'}>
+        <div>{`${contact.firstname} ${contact.lastname}`}</div>
+        <div>{`Pet Name Identification: ${contact.petname}`}</div>
+        <div>{`Pet Owner Phone Number: ${contact.phone}`}</div>
+      </div>
+    )
+  }
+
   return (
-    <Container maxWidth="sm" cLassName={'container w-full h-full m-20 p-2'}>
+    <Container>
       <Box sx={{p: 4, borderRadius: 2, boxShadow: 3, backgroundColor: 'white', textAlign: 'center'}}>
-        <InfoText title={'Contact Information'} text={'test'}/>
+        <Card>
+          <InfoText title='Contact Information' text={formattedContactInfo()}/>
+        </Card>
         <FormControl fullWidth variant="outlined" style={{marginBottom: '1em'}}>
           <InputLabel id="demo-simple-select-label">Select Option</InputLabel>
           <Select

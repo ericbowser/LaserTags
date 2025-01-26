@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 const Contact = () => {
   const navigate = useNavigate();
   const {userid} = useParams();
+  console.log('userid: ', userid);
 
   const [needsCreated, setNeedsCreated] = useState(null);
   const [contact, setContact] = useState(null);
@@ -24,7 +25,7 @@ const Contact = () => {
   const [saved, setSaved] = useState(false);
   const [update, setUpdate] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
-  const [userId, setUserId] = useState(userid || null);
+  const [user, setUser] = useState(userid);
   const [initialFetch, setInitialFetch] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -51,7 +52,7 @@ const Contact = () => {
 
   async function queryContact() {
     try {
-      const contact = await getContact(userId)
+      const contact = await getContact(userid)
       if (contact.exists) {
         setCurrentContact(contact);
         return contact;
@@ -67,10 +68,11 @@ const Contact = () => {
 
   function setCurrentContact(contact, userid = -1) {
     setNeedsCreated(false);
+    console.log('Contact: ', contact);
     setContact(contact);
     setFormData(contact);
     setContactFetched(true);
-    setUserId(userid);
+    setUser(userid);
     console.log('User id after contact set in state: ', userid);
   }
 
@@ -90,7 +92,7 @@ const Contact = () => {
   useEffect(() => {
     const formData = checkFormData();
     let count;
-    if (!formData && userId && !needsCreated && initialFetch === null) {
+    if (!formData && user && !needsCreated && initialFetch === null) {
       console.log('count: ', count++);
       queryContactInfo().then(contact => {
         console.log('contact: ', contact);
@@ -100,10 +102,10 @@ const Contact = () => {
     if (!needsCreated && initialFetch) {
       console.log('Contact in session: ', formData)
     }
-  }, [userId, initialFetch, formData]);
+  }, [user, initialFetch, formData]);
 
   useEffect(() => {
-  }, [allFieldsSet, saved, needsCreated, update, isUpdated, userId, initialFetch]);
+  }, [allFieldsSet, saved, needsCreated, update, isUpdated, userid, initialFetch]);
 
   const handleChange = (e) => {
     setFormData({
@@ -114,12 +116,13 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if ( !isEmpty(formData.firstname)
+    if ( !isEmpty(user)
+      && !isEmpty(formData.firstname)
       && !isEmpty(formData.petname)
       && (!isEmpty(formData.phone) && !isEmpty(formData.address))
     ) {
       const request = {
-        userid: userId,
+        userid: user,
         ...formData
       };
       console.log('request', request);
@@ -137,7 +140,7 @@ const Contact = () => {
         if (contact) {
           console.log('Saved Response: ', contact);
           setSaved(true);
-          setUserId(contact?.userid);
+          setUser(contact?.userid);
         }
       }
     } else {

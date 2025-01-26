@@ -36,6 +36,7 @@ async function getContact(userid = null){
         contact: null
       };
     }
+    console.log('data from contact fetch: ', data);
     return data;
   } catch (error) {
     console.error(error);
