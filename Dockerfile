@@ -8,10 +8,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
 
 # Copy the rest of the application code
 COPY . .
+RUN npm install
 RUN npx run build
 
 # Set a default port (can be overridden when running the container)

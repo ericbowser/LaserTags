@@ -1,7 +1,7 @@
 ﻿import React, {useEffect, useState} from 'react';
 import {getContact, saveContact, updateContact} from "../api/tagApi";
 import {isEmpty} from "lodash";
-import {useParams} from 'react-router-dom';
+import {useNavigate, useParams} from 'react-router-dom';
 import Form from "react-bootstrap/Form";
 import FormControl from "react-bootstrap/FormControl";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
@@ -9,23 +9,21 @@ import FormGroup from "react-bootstrap/FormGroup";
 import FormLabel from "react-bootstrap/FormLabel";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
-import { useNavigate } from 'react-router-dom';
 
 const Contact = () => {
   const navigate = useNavigate();
   const {userid} = useParams();
-  console.log('userid: ', userid);
+  console.log('userid passed in from params: ', userid);
 
   const [needsCreated, setNeedsCreated] = useState(null);
   const [contact, setContact] = useState(null);
-  const [contactFetched, setContactFetched] = useState(false);
-
+  const [contactFetched, setContactFetched] = useState(null);
   const [navigateProfile, setNavigateProfile] = useState(false);
   const [allFieldsSet, setAllFieldsSet] = useState(false);
   const [saved, setSaved] = useState(false);
   const [update, setUpdate] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
-  const [user, setUser] = useState(userid);
+  const [user, setUser] = useState(userid || -1);
   const [initialFetch, setInitialFetch] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -38,9 +36,9 @@ const Contact = () => {
 
   useEffect(() => {
     if (navigateProfile) {
-      navigate(`/profile/${userid}`, {state: {userid, contact}});
+      navigate(`/profile/${user}`, {state: {user, contact}});
     }
-  }, [navigateProfile]);
+  }, [navigateProfile, user]);
 
   const checkFormData = () => {
     const exists = Boolean(formData && formData.address !== ''
@@ -52,7 +50,7 @@ const Contact = () => {
 
   async function queryContact() {
     try {
-      const contact = await getContact(userid)
+      const contact = await getContact(user)
       if (contact.exists) {
         setCurrentContact(contact);
         return contact;
@@ -66,24 +64,24 @@ const Contact = () => {
     }
   }
 
-  function setCurrentContact(contact, userid = -1) {
+  function setCurrentContact(contact) {
     setNeedsCreated(false);
-    console.log('Contact: ', contact);
     setContact(contact);
     setFormData(contact);
-    setContactFetched(true);
-    setUser(userid);
-    console.log('User id after contact set in state: ', userid);
+    setFormData(contact);
+    console.log('User id after contact set in state: ', user);
   }
 
   async function queryContactInfo() {
-      const contact = await queryContact();
+    const contact = await queryContact()
     if (contact.exists) {
-      setNeedsCreated(false);
-      setCurrentContact(contact.contact);
+      setCurrentContact(contact);
+      setFormData(contact);
+      setContactFetched(true);
     } else {
       setNeedsCreated(true);
       setContact(null);
+      setContactFetched(false);
     }
 
     return contact;
@@ -91,21 +89,27 @@ const Contact = () => {
 
   useEffect(() => {
     const formData = checkFormData();
-    let count;
-    if (!formData && user && !needsCreated && initialFetch === null) {
-      console.log('count: ', count++);
-      queryContactInfo().then(contact => {
-        console.log('contact: ', contact);
-        setInitialFetch(false);
-      });
+    if (!contact && user && !needsCreated) {
+      queryContactInfo().then(theContact => {
+        console.log('contact: ', theContact);
+        if (theContact.exists) {
+          setContact(theContact.contact);
+          setFormData(theContact.contact);
+          setInitialFetch(false);
+        } else {
+          setNeedsCreated(true);
+          setFormData(null);
+          setContact(null);
+          /*
+                    setSpinner(false);
+          */
+        }
+      })
     }
-    if (!needsCreated && initialFetch) {
-      console.log('Contact in session: ', formData)
-    }
-  }, [user, initialFetch, formData]);
+  }, [contact, user, needsCreated]);
 
   useEffect(() => {
-  }, [allFieldsSet, saved, needsCreated, update, isUpdated, userid, initialFetch]);
+  }, [allFieldsSet, saved, contactFetched, contact]);
 
   const handleChange = (e) => {
     setFormData({
@@ -116,7 +120,7 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if ( !isEmpty(user)
+    if (!isEmpty(user)
       && !isEmpty(formData.firstname)
       && !isEmpty(formData.petname)
       && (!isEmpty(formData.phone) && !isEmpty(formData.address))
@@ -209,7 +213,7 @@ const Contact = () => {
             }
           </span>
         </Button>
-        {contact && userid &&(
+        {Boolean(contactFetched) && !user && (
           <Button onClick={() => {
             setNavigateProfile(true);
             console.log('set profile navigation: ', true);
@@ -219,10 +223,10 @@ const Contact = () => {
             <label>Go to Profile</label>
           </span>
           </Button>
-        /*  <Profile
-            contact={contact}
-            userid={userId}
-          />*/
+          /*  <Profile
+              contact={contact}
+              userid={userId}
+            />*/
         )}
 
       </Form>

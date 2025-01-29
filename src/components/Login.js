@@ -15,12 +15,10 @@ function Login() {
   const [password, setPassword] = useState(null);
   const [userid, setUserId] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [alreadyHasAccount, setAlreadyHasAccount] = useState(null);
   const [spinner, setSpinner] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
-  }, [email, password, spinner, alreadyHasAccount]);
+  }, [email, password, spinner]);
 
   useEffect(() => {
   }, [email]);
@@ -49,10 +47,14 @@ function Login() {
     if (loggedInUser) {
       console.log('logged in user: ', loggedInUser);
       setUserId(loggedInUser);
+      setIsLoggedIn(true);
+      console.log('logged in User: ', loggedInUser);
       return loggedInUser;
+    } else {
+      setIsLoggedIn(false);
+      console.log('failed to log in');
     }
 
-    console.log(loggedInUser);
     setSpinner(false);
     return null;
   }
