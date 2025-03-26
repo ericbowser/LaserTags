@@ -16,3 +16,6 @@ build/
 
 src/output.css
 ./src/output.css
+
+.env*
+.flaskenv*

@@ -7,6 +7,12 @@ import Contact from "./components/Contact";
 import StripePayment from "./components/StripePayment";
 import SvgBackground from "./components/SvgBackground";
 import Profile from "./components/Profile";
+import {Auth0Provider} from "@auth0/auth0-react";
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+const config = dotenv.config();
+console.log(config);
 
 
 const url = window.URL || window.webkitURL;
@@ -59,5 +65,13 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root'))
   .render(
-    <RouterProvider router={router}/>
-  )
+    <Auth0Provider
+      domain=config.parsed.AUTH0_DOMAIN
+      clientId=config.parsed.AUTH0_CLIENT_ID
+      authorizationParams={{
+        redirect_uri: window.location.origin
+      }}
+    >
+      <RouterProvider router={router}/>
+    </Auth0Provider>
+  );
