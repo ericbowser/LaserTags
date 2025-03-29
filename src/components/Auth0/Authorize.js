@@ -1,12 +1,44 @@
-var request = require("request");
+import { useAuth0 } from "@auth0/auth0-react";
 
-var options = { method: 'POST',
-  url: 'https://dev-nx945r7l.auth0.com/oauth/token',
-  headers: { 'content-type': 'application/json' },
-  body: '{"client_id":"JTk1ghk461a7pYPC3Z2qMJXqQtFFaXG0","client_secret":"69eSVN_JR5tniy62EtNmuCGBn9mWnj9tYHdHOJMfkO5PI4hBcbj6vGCJ9FLEtLb2","audience":"https://dev-nx945r7l.auth0.com/api/v2/","grant_type":"client_credentials"}' };
+export const useAuth = () => {
+  const {
+    isAuthenticated,
+    loginWithRedirect,
+    logout,
+    user,
+    isLoading,
+    getAccessTokenSilently
+  } = useAuth0();
+  
+ async function login() {
+   console.log('Logging in with redirect...');
+    await loginWithRedirect();
+  };
 
-request(options, function (error, response, body) {
-  if (error) throw new Error(error);
+  async function handleLogout(){
+    console.log('handling logout...');
+    await logout({ returnTo: window.location.origin });
+  };
 
-  console.log(body);
-});
+  async function getToken(){
+    try {
+      console.log('Getting token...');
+      const token = await getAccessTokenSilently();
+      console.log('token fetched: ', token);
+      return token;
+    } catch (error) {
+      console.error("Error getting token", error);
+      return null;
+    }
+  };
+
+  return {
+    isAuthenticated,
+    isLoading,
+    user,
+    login,
+    logout: handleLogout,
+    useAuth,
+    getToken
+  };
+};

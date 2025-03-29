@@ -19,3 +19,5 @@ src/output.css
 
 .env*
 .flaskenv*
+
+ssl/*

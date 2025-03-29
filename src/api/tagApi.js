@@ -60,7 +60,7 @@ const updateContact = async (body = {}) => {
   }
 }
 
-async function login(body = {}) {
+async function loginBackendLaser(body = {}) {
   console.log('Login:  ', body);
   try {
     const user = await axios.post(`${baseUrl}/login`, body);
@@ -78,4 +78,4 @@ async function login(body = {}) {
   }
 }
 
-export {saveContact, getContact, login, updateContact};
+export {saveContact, getContact, loginBackendLaser, updateContact};

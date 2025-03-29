@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack');
 const Dotenv = require('dotenv-webpack');
 const dotenv = require('dotenv');
+const fs = require('fs');
 
 // Load environment variables from .env file
 const config = dotenv.config();
@@ -58,7 +59,15 @@ module.exports = {
     historyApiFallback: true,
     port: process.env.PORT,
     host: process.env.HOST,
-    hot: true
+    hot: true,
+    // Add HTTPS configuration
+    server: {
+      type: 'https',
+      options: {
+        key: fs.readFileSync(path.resolve(__dirname, './ssl/server.key')),
+        cert: fs.readFileSync(path.resolve(__dirname, './ssl/server.crt')),
+      }
+    }
   },
   mode: process.env.NODE_ENV || 'development',
   resolve: {

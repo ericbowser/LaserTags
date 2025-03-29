@@ -8,12 +8,12 @@ import StripePayment from "./components/StripePayment";
 import SvgBackground from "./components/SvgBackground";
 import Profile from "./components/Profile";
 import {Auth0Provider} from "@auth0/auth0-react";
-const dotenv = require('dotenv');
 
-// Load environment variables from .env file
-const config = dotenv.config();
-console.log(config);
-
+// Get environment variables - making sure they're accessible
+const domain = process.env.AUTH0_DOMAIN;
+const clientId = process.env.AUTH0_CLIENT_ID;
+console.log(domain);
+console.log(clientId);
 
 const url = window.URL || window.webkitURL;
 console.log('URL: ', url);
@@ -66,8 +66,8 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root'))
   .render(
     <Auth0Provider
-      domain=config.parsed.AUTH0_DOMAIN
-      clientId=config.parsed.AUTH0_CLIENT_ID
+      domain={domain}
+      clientId={clientId}
       authorizationParams={{
         redirect_uri: window.location.origin
       }}
