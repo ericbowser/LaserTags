@@ -9,7 +9,9 @@
     "build:docker": "docker build -t lasertg .",
     "run": "docker run -p 31666:31666 lasertg",
     "dev": "webpack-dev-server --mode=production --open",
-    "clean": "rm node_modules/ -R && rm package-lock.json && npm install"
+    "clean": "rm node_modules/ -R && rm package-lock.json && npm install",
+    "dotpsh": "npx dotenv-vault push",
+    "dotpll": "npx dotenv-vault pull"
   },
   "author": "E.R.B.",
   "license": "ISC",

@@ -1,5 +1,5 @@
 ﻿import React, {useEffect, useState} from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useNavigate} from 'react-router-dom';
 import {loginBackendLaser} from '../api/tagApi';
 import Form from "react-bootstrap/Form";
 import FormControl from "react-bootstrap/FormControl";
@@ -7,7 +7,7 @@ import FormLabel from "react-bootstrap/FormLabel";
 import Container from "react-bootstrap/Container";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
 import Button from "react-bootstrap/Button";
-import { useAuth } from './Auth0/Authorize'; 
+import {useAuth} from './Auth0/Authorize';
 import {LoginButton, LogoutButton} from "./Auth0/LoginLogoutButton";
 
 function Login() {
@@ -21,7 +21,7 @@ function Login() {
   const [error, setError] = useState(false);
 
   // Auth0 hook to get authentication status and user info
-  const { loginWithRedirect, isAuthenticated, isLoading, user } = useAuth();
+  const {login, isAuthenticated, isLoading, user} = useAuth();
 
   // If already authenticated with Auth0, set user ID and redirect
   useEffect(() => {
@@ -33,7 +33,7 @@ function Login() {
       setIsLoggedIn(true);
     }
   }, [isAuthenticated, user]);
-  
+
   useEffect(() => {
   }, [email, password, spinner]);
 
@@ -80,21 +80,26 @@ function Login() {
     return null;
   }
 
-  if (isLoading) {
+  // Handle login button click
+  async function handleLogin() {
+    const res = await login();
+    console.log('login response: ', res);
+  };
+
+/*  if (isLoading) {
     return (
       <Container className="m-52 p-4 text-white bolder bg-black border-2 backdrop-contrast-75">
         <div>Loading authentication status...</div>
       </Container>
     );
-  }
+  }*/
 
   return (
     <Container className={'m-52 p-4 text-white bolder bg-black border-2 backdrop-contrast-75'}>
       {/* Auth0 Login Button */}
       <div className="mb-5">
         <h3 className="mb-3">Sign in with Social Media</h3>
-        <LoginButton /> 
-        <LogoutButton />
+        <LoginButton/>
       </div>
 
       <div className="relative my-4">
@@ -105,40 +110,15 @@ function Login() {
           <span className="px-2 bg-black text-white">Or continue with email</span>
         </div>
       </div>
-      <Form onSubmit={handleLoginBackendLaser}>
-        <FloatingLabel for={'Email'} id={'Email'}>
-          Email
-        </FloatingLabel>
-        <FormControl
-          onChange={handleUsernameChange}
-          as="input"
-          type="email"
-          id="Email"
-          required
-        />
-        <FormLabel htmlFor={'Password'} id={'Password'}>
-          Password
-        </FormLabel>
-        <FormControl
-          onChange={handlePasswordChange}
-          as="input"
-          type="password"
-          id="Password"
-          required
-        />
-        <Button
-          id={'Login'}
-          type="submit"
-          disabled={!email || !password || email.trim() === '' || password.trim() === ''}
-          className={` mt-4 align-middle p-2 mr-2 flex justify-center border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-            !email || !password || email.trim() === '' || password.trim() === ''
-              ? 'opacity-50 cursor-not-allowed'
-              : ''
-          }`}
-        >
-          Sign In
-        </Button>
-      </Form>
+      <Button
+        id={'Login'}
+        type="submit"
+        onClick={handleLogin}
+        className={'mt-4 align-middle p-2 mr-2 flex justify-center border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 '}
+      >
+        Register / Sign In
+      </Button>
+      <LogoutButton/>
     </Container>
   );
 }
