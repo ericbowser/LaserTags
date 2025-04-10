@@ -21,3 +21,5 @@ src/output.css
 .flaskenv*
 
 ssl/*
+
+coverage/*

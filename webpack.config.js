@@ -61,13 +61,13 @@ module.exports = {
     host: process.env.HOST,
     hot: true,
     // Add HTTPS configuration
-    server: {
+   /* server: {
       type: 'https',
       options: {
         key: fs.readFileSync(path.resolve(__dirname, './ssl/server.key')),
         cert: fs.readFileSync(path.resolve(__dirname, './ssl/server.crt')),
       }
-    }
+    }*/
   },
   mode: process.env.NODE_ENV || 'development',
   resolve: {

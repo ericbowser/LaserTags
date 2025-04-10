@@ -1,65 +1,45 @@
 /** @jest-environment jsdom */
-
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, getByRole, getByLabelText } from '@testing-library/react';
 import Login from '../components/Login';
-import expect from "expect";
-import {it, describe} from "@jest/globals";
+import {it, describe, expect, jest, beforeEach, afterAll} from "@jest/globals";
+import {Auth0Provider} from "@auth0/auth0-react"; 
 
+
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  useNavigate: () => jest.fn().mockReturnValue(mockNavigate),
+}));
+
+const mockAuth0 = {
+  isAuthenticated: true,
+  user: {
+    name: 'Test User',
+    email: 'test@example.com',
+    sub: 'test|123456789'
+  },
+  loginWithRedirect: jest.fn(),
+  logout: jest.fn(),
+  getAccessTokenSilently: jest.fn().mockResolvedValue('test-token')
+};
+
+jest.mock('@auth0/auth0-react', () => ({
+  useAuth0: () => mockAuth0,
+}));
 
 describe('LoginForm', () => {
-  it.only('renders the form', () => {
+  it('renders the form', async () => {
     render(<Login />);
-    expect(screen.getByLabelText('Email')).toBeInTheDocument();
-    expect(screen.getByLabelText('Password')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
-  });
-
-  it('shows error on invalid login', async () => {
-    render(<LoginForm />);
-    fireEvent.change(screen.getByLabelText('Username:'), {
-      target: { value: 'wronguser' },
-    });
-    fireEvent.change(screen.getByLabelText('Password:'), {
-      target: { value: 'wrongpass' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Login' }));
-
+    const signIn = screen.getByRole('button', {name:'Register / Sign In'});
+    expect(signIn).toBeDefined()
+    fireEvent.click(signIn);
+    
     await waitFor(() => {
-      expect(screen.getByTestId('error-message')).toHaveTextContent(
-        'Invalid username or password'
-      );
+      expect(mockAuth0.loginWithRedirect).toHaveBeenCalledTimes(1);
     });
   });
-
-  it('calls onLogin prop with correct data on valid login', async () => {
-    const onLogin = jest.fn();
-    render(<LoginForm onLogin={onLogin} />);
-    fireEvent.change(screen.getByLabelText('Username:'), {
-      target: { value: 'testuser' },
-    });
-    fireEvent.change(screen.getByLabelText('Password:'), {
-      target: { value: 'testpass' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Login' }));
-
-    await waitFor(() => {
-      expect(onLogin).toHaveBeenCalledWith({ username: 'testuser' });
-    });
-  });
-  it('Does not show error on successful login', async ()=>{
-    const onLogin = jest.fn();
-    render(<LoginForm onLogin={onLogin} />);
-    fireEvent.change(screen.getByLabelText('Username:'), {
-      target: { value: 'testuser' },
-    });
-    fireEvent.change(screen.getByLabelText('Password:'), {
-      target: { value: 'testpass' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Login' }));
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('error-message')).not.toBeInTheDocument()
-    });
+  
+  afterAll(() => {
+    jest.clearAllMocks();
   })
 });
