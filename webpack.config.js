@@ -60,14 +60,14 @@ module.exports = {
     port: process.env.PORT,
     host: process.env.HOST,
     hot: true,
-    // Add HTTPS configuration
-   /* server: {
-      type: 'https',
-      options: {
-        key: fs.readFileSync(path.resolve(__dirname, './ssl/server.key')),
-        cert: fs.readFileSync(path.resolve(__dirname, './ssl/server.crt')),
-      }
-    }*/
+    // Add local HTTPS configuration
+     server: {
+       type: 'https',
+       options: {
+         key: fs.readFileSync(path.resolve(__dirname, './ssl/server.key')),
+         cert: fs.readFileSync(path.resolve(__dirname, './ssl/server.crt')),
+       }
+     }
   },
   mode: process.env.NODE_ENV || 'development',
   resolve: {
@@ -90,11 +90,9 @@ module.exports = {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
       'process.env.PORT': JSON.stringify(process.env.PORT),
       'process.env.HOST': JSON.stringify(process.env.HOST),
-      /*
-                  'process.env.SEND_EMAIL_URL': JSON.stringify(process.env.SEND_EMAIL_URL),
-                  'process.env.BASE_URL': JSON.stringify(process.env.BASE_URL),
-                  'process.env.SAVE_CONTACT_URL': JSON.stringify(process.env.SAVE_CONTACT_URL),
-      */
+      'process.env.SEND_EMAIL_URL': JSON.stringify(process.env.SEND_EMAIL_URL),
+      'process.env.BASE_URL': JSON.stringify(process.env.BASE_URL),
+      'process.env.SAVE_CONTACT_URL': JSON.stringify(process.env.SAVE_CONTACT_URL),
     }),
     new webpack.HotModuleReplacementPlugin(),
   ],

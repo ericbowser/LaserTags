@@ -1,6 +1,6 @@
 ﻿import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {loginBackendLaser} from '../api/tagApi';
+import {getContact, loginBackendLaser} from '../api/tagApi';
 import Form from "react-bootstrap/Form";
 import FormControl from "react-bootstrap/FormControl";
 import FormLabel from "react-bootstrap/FormLabel";
@@ -23,16 +23,48 @@ function Login() {
   // Auth0 hook to get authentication status and user info
   const {login, isAuthenticated, isLoading, user} = useAuth();
 
-  // If already authenticated with Auth0, set user ID and redirect
+  // Login.js
   useEffect(() => {
-    if (isAuthenticated && user) {
-      // Extract user ID from Auth0 user object (adjust as needed)
-      console.log('User returned from Auth0: ', user);
-      const auth0UserId = user.sub.split('|')[1];
-      setUserId(auth0UserId);
-      setIsLoggedIn(true);
+    // Add logging to see the state right when the effect runs in the test
+    console.log('Login Effect Check:', { isAuthenticated, isLoading, userExists: !!user, userSub: user?.sub });
+
+    if (isAuthenticated && !isLoading && user) {
+      // Use optional chaining to safely access 'sub' and then split
+      const subParts = user?.sub?.split('|'); // Safely split user.sub if it exists
+      const auth0UserId = subParts?.[1]; // Get the second part if split was successful
+
+      // Check if we actually got the ID
+      if (auth0UserId) {
+        const email = user.email; // Assume email exists if user exists
+        const userPayload = { // Renamed to avoid shadowing 'user' from useAuth
+          username: email,
+          userid: auth0UserId
+        };
+
+        // Call backend login
+        loginBackendLaser(userPayload)
+          .then(backendResponse => { // Use a more descriptive variable name
+            console.log('Backend login successful for userid:', backendResponse?.userid); // Optional chaining for safety
+            // Use data from the payload or response as appropriate
+            setEmail(userPayload.username);
+            setUserId(auth0UserId); // Set the ID we extracted
+            setIsLoggedIn(true);
+          })
+          .catch(error => {
+            // Handle potential errors from the backend login
+            console.error('Backend login failed:', error);
+            setError('Failed to sync login with backend.'); // Set an error state for the user
+            setIsLoggedIn(false); // Ensure state is correct on error
+          });
+      } else {
+        // Handle the case where user.sub was missing or didn't have the expected format
+        console.error("Could not extract auth0UserId from user.sub:", user?.sub);
+        setError("There was an issue processing your user profile."); // Inform the user
+        setIsLoggedIn(false);
+      }
     }
-  }, [isAuthenticated, user]);
+    // Add isLoading to dependencies if its change should re-trigger the effect
+  }, [isAuthenticated, isLoading, user]); // Make sure isLoading is in the dependency array
 
   useEffect(() => {
   }, [email, password, spinner]);
@@ -79,14 +111,22 @@ function Login() {
     setSpinner(false);
     return null;
   }
+  
+  
 
   // Handle login button click
   async function handleLogin() {
-    const res = await login();
-    console.log('login response: ', res);
-  };
+    try {
+      const response = await login();
+      console.log('login Auth0 response: ', response);
+      await loginBackendLaser();
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
 
-/*  if (isLoading) {
+  /*if (isLoading) {
     return (
       <Container className="m-52 p-4 text-white bolder bg-black border-2 backdrop-contrast-75">
         <div>Loading authentication status...</div>

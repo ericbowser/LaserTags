@@ -1,7 +1,6 @@
 ﻿import React, {useEffect, useState} from 'react';
 import {getContact, saveContact, updateContact} from "../api/tagApi";
-import {isEmpty} from "lodash";
-import {useNavigate, useParams} from 'react-router-dom';
+import {useParams} from 'react-router-dom';
 import Form from "react-bootstrap/Form";
 import FormControl from "react-bootstrap/FormControl";
 import FloatingLabel from "react-bootstrap/FloatingLabel";
@@ -9,232 +8,218 @@ import FormGroup from "react-bootstrap/FormGroup";
 import FormLabel from "react-bootstrap/FormLabel";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/Button";
+import {useAuth} from "./Auth0/Authorize";
+import {Alert} from "react-bootstrap";
+import {isEmpty} from "lodash";
 
 const Contact = () => {
-  const navigate = useNavigate();
+  const {user, isAuthenticated, saveContactToAuth0} = useAuth();
   const {userid} = useParams();
   console.log('userid passed in from params: ', userid);
 
   const [needsCreated, setNeedsCreated] = useState(null);
-  const [contact, setContact] = useState(null);
   const [contactFetched, setContactFetched] = useState(null);
   const [navigateProfile, setNavigateProfile] = useState(false);
   const [allFieldsSet, setAllFieldsSet] = useState(false);
   const [saved, setSaved] = useState(false);
   const [update, setUpdate] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
-  const [user, setUser] = useState(userid || -1);
-  const [initialFetch, setInitialFetch] = useState(null);
-
-  const [formData, setFormData] = useState({
-    petname: '',
-    firstname: '',
-    lastname: '',
-    phone: '',
-    address: '',
-  });
-
-  useEffect(() => {
-    if (navigateProfile) {
-      navigate(`/profile/${user}`, {state: {user, contact}});
-    }
-  }, [navigateProfile, user]);
-
-  const checkFormData = () => {
-    const exists = Boolean(formData && formData.address !== ''
-      && formData.firstname !== ''
-      && formData.lastname !== ''
-      && formData.phone !== '');
-    return exists;
-  }
-
-  async function queryContact() {
-    try {
-      const contact = await getContact(user)
-      if (contact.exists) {
-        setCurrentContact(contact);
-        return contact;
-      } else {
-        setNeedsCreated(true);
-        return contact;
-      }
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  }
-
-  function setCurrentContact(contact) {
-    setNeedsCreated(false);
-    setContact(contact);
-    setFormData(contact);
-    setFormData(contact);
-    console.log('User id after contact set in state: ', user);
-  }
-
-  async function queryContactInfo() {
-    const contact = await queryContact()
-    if (contact.exists) {
-      setCurrentContact(contact);
-      setFormData(contact);
-      setContactFetched(true);
-    } else {
-      setNeedsCreated(true);
-      setContact(null);
-      setContactFetched(false);
-    }
-
-    return contact;
-  }
-
-  useEffect(() => {
-    const formData = checkFormData();
-    if (!contact && user && !needsCreated) {
-      queryContactInfo().then(theContact => {
-        console.log('contact: ', theContact);
-        if (theContact.exists) {
-          setContact(theContact.contact);
-          setFormData(theContact.contact);
-          setInitialFetch(false);
-        } else {
-          setNeedsCreated(true);
-          setFormData(null);
-          setContact(null);
-          /*
-                    setSpinner(false);
-          */
-        }
-      })
-    }
-  }, [contact, user, needsCreated]);
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(null);
+  const [contact, setContact] = useState(null);
 
   useEffect(() => {
   }, [allFieldsSet, saved, contactFetched, contact]);
 
+  /* useEffect(() => {
+     if (isAuthenticated && user) {
+       const auth0UserId = user.sub.split('|')[1];
+       getContact(auth0UserId).then(contact => {
+         if (contact.exists) {
+           setContact(contact.contact);
+           setError(null);
+         } else {
+           setNeedsCreated(true);
+           setError(null);
+         }
+       }).catch(error => {
+         console.log(error);
+         setError(error);
+       });
+     }
+   }, [isAuthenticated, user]);
+ */
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setContact({
+      ...contact,
       [e.target.name]: e.target.value,
     });
   };
 
+  function setCurrentContact(contact) {
+    setNeedsCreated(false);
+    setContact(contact);
+    setError(null);
+  }
+
+  /* const handleSubmit = async (e) => {
+     e.preventDefault();
+     setIsSubmitting(true);
+     setError(null);
+     setSaved(false);
+ 
+     try {
+       // Validate form data
+       if (!contact.petname || !contact.firstname || !contact.phone || !contact.address) {
+         setError('Please fill out all required fields');
+         setIsSubmitting(false);
+         return;
+       }
+       // Save data to Auth0 user metadata
+       await saveContactToAuth0(contact);
+       await saveContact(contact);
+       setSaved(true);
+     } catch (err) {
+       console.error('Error saving contact:', err);
+       setError('Failed to save contact information. Please try again.');
+     } finally {
+       setIsSubmitting(false);
+     }
+   };*/
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isEmpty(user)
-      && !isEmpty(formData.firstname)
-      && !isEmpty(formData.petname)
-      && (!isEmpty(formData.phone) && !isEmpty(formData.address))
-    ) {
-      const request = {
-        userid: user,
-        ...formData
-      };
-      console.log('request', request);
-      if (update) {
-        try {
-          const updateResponse = await updateContact(formData);
-          if (updateResponse) {
-            setIsUpdated(true);
-          }
-        } catch (err) {
-          console.log(err);
+    const request = {
+      userid,
+      ...contact
+    };
+    console.log('request', request);
+    if (update) {
+      try {
+        const updateResponse = await updateContact(contact);
+        if (updateResponse) {
+          setIsUpdated(true);
         }
-      } else {
-        const contact = await saveContact(request);
-        if (contact) {
-          console.log('Saved Response: ', contact);
-          setSaved(true);
-          setUser(contact?.userid);
-        }
+      } catch (err) {
+        console.log(err);
+        setError(err);
       }
     } else {
-      setAllFieldsSet(false);
+      const contact = await saveContact(request);
+      if (contact) {
+        console.log('Saved Response: ', contact);
+        setSaved(true);
+      }
     }
-  };
+  }
 
   return (
-    <Container className={'text-center'}>
-      <FloatingLabel>Dog Tag QR Generator</FloatingLabel>
-      <Form className={'text-white'}
+    <div className={'contact'}>
+      {error &&
+        <Alert id={'error'} name={'Error'} variant={'danger'}>
+          {error}
+        </Alert>
+      }
+      <form className={'contact-form'}
+            id={'contact-form'}
+            name={'contact-form'}
             onSubmit={handleSubmit}>
-        <FormGroup>
-          <FormLabel>Pet Name</FormLabel>
-          <FormControl
+        <h1>Dog Tag QR Generator</h1>
+        <div>
+          
+        <span>
+
+            <label id={'petname_label'}>Pet Name</label>
+            <input
+              id={'contact'}
+              type="text"
+              name="petname"
+              required={true}
+              value={contact?.petname}
+              onChange={handleChange}
+            />
+          </span>
+        </div>
+        <div>
+          
+        <span>
+
+            <label id={'firstname_label'}>First Name</label>
+            <input
+              id={'contact_firstname'}
+              required={true}
+              type="text"
+              name="firstname"
+              value={contact?.firstname}
+              onChange={handleChange}
+            />
+        </span>
+        </div>
+        <div>
+          
+        <span>
+            <label id={'lastname_label'}>Last Name</label>
+            <input
+              id={'contact_lastname'}
+              type="text"
+              name="lastname"
+              value={contact?.lastname}
+              onChange={handleChange}
+            />
+          </span>
+        </div>
+        <div>
+          
+        <span>
+          <label id={'address_label'}>Address</label>
+          <input
+            id={'contact_address'}
             type="text"
-            as="input"
-            name="petname"
-            required={true}
-            value={formData?.petname}
-            onChange={handleChange}
-          />
-          <FormLabel>First Name</FormLabel>
-          <FormControl
-            required={true}
-            type="text"
-            as="input"
-            name="firstname"
-            value={formData?.firstname}
-            onChange={handleChange}
-          />
-          <FormLabel>Last Name</FormLabel>
-          <FormControl
-            type="text"
-            as="input"
-            name="lastname"
-            value={formData?.lastname}
-            onChange={handleChange}
-          />
-          <FormLabel>Address</FormLabel>
-          <FormControl
-            type="text"
-            as="input"
             name="address"
-            value={formData?.address}
+            value={contact?.address}
             onChange={handleChange}
           />
-          <FormLabel>Phone</FormLabel>
-          <FormControl
+          </span>
+        </div>
+        <div>
+          
+        <span>
+          <label id={'phone_label'}>Phone</label>
+          <input
+            id={'contact_phone'}
             type="phone"
-            as="input"
             name="phone"
             required={true}
-            value={formData?.phone}
+            value={contact?.phone}
             onChange={handleChange}
           />
-        </FormGroup>
-        <Button
-          type="submit"
-          variant={'primary'}
-        >
+        </span>
+        </div>
+        <div>
+
+          <Button
+            id={'submit-contact'}
+            name={'submit'}
+            type="submit"
+            variant={'primary'}
+          >
           <span>
             {contact !== null
               ? 'Update Contact'
               : 'Create Contact'
             }
           </span>
-        </Button>
-        {Boolean(contactFetched) && !user && (
-          <Button onClick={() => {
-            setNavigateProfile(true);
-            console.log('set profile navigation: ', true);
-
-          }}>
-          <span>
-            <label>Go to Profile</label>
-          </span>
           </Button>
-          /*  <Profile
-              contact={contact}
-              userid={userId}
-            />*/
-        )}
-
-      </Form>
+        </div>
+        {/* <span>
+            <label>Go to Profile</label>
+          </span>*/}
+      </form>
       {
         isUpdated &&
-        <span className={'text-3xl text-green-400'}>Updated!</span>
+        <span id={'updated'} name={'updated'} className={'text-3xl text-green-400'}>Updated!</span>
       }
-    </Container>
+    </div>
   )
 }
 
