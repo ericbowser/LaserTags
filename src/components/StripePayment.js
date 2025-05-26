@@ -6,7 +6,7 @@ import {
     useStripe,
     useElements,
 } from '@stripe/react-stripe-js';
-const stripePromise = loadStripe('pk_test_6pRNASCoBOKtIshFeQd4XMUh');
+const stripePromise = loadStripe('');
 
 const options = {
     mode: 'payment',
