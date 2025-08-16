@@ -61,7 +61,7 @@ const updateContact = async (body = {}) => {
 }
 
 async function loginBackendLaser(body = {}) {
-  console.log('Login:  ', body);
+  console.log('User payload:  ', body);
   try {
     const user = await axios.post(`${baseUrl}/login`, body);
     console.log('user: ', user);

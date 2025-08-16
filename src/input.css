@@ -28,16 +28,18 @@
     padding: 5px;
     gap: 4px;
     font-size: x-large;
-    input {
-        width: auto;
-        padding: 2px;
+    .input {
+        width: 300px;
+        padding: 5px;
         border-radius: 2px;
         background-color: lightgray;
     }
-    label {
+    &label {
         box-shadow: blue 1px 0 0 1px;
         padding: 5px;
         margin-right: 5px;
+        width: 200px;
+        min-width: 200px;
     }
     button {
         margin-top: 40px;

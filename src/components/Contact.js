@@ -114,7 +114,7 @@ const Contact = () => {
   }
 
   return (
-    <div className={'contact'}>
+    <div>
       {error &&
         <Alert id={'error'} name={'Error'} variant={'danger'}>
           {error}

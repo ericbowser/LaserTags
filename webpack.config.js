@@ -16,6 +16,7 @@ module.exports = {
   entry: {
     main: './src/index.js',
     login: './src/components/Login.js',
+    materials: './src/components/Materials.js',
     contact: './src/components/Contact.js',
     qrcode: './src/components/Qrcode.js',
     stripe: './src/components/StripePayment.js',

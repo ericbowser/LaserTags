@@ -1,6 +1,5 @@
 import React from 'react';
 import {createRoot} from "react-dom/client";
-import './output.css';
 import {createBrowserRouter, RouterProvider,} from "react-router-dom";
 import Login from "./components/Login";
 import Contact from "./components/Contact";
@@ -8,6 +7,7 @@ import StripePayment from "./components/StripePayment";
 import SvgBackground from "./components/SvgBackground";
 import Profile from "./components/Profile";
 import {Auth0Provider} from "@auth0/auth0-react";
+import './input.css';
 
 // Get environment variables - making sure they're accessible
 const domain = process.env.AUTH0_DOMAIN;
@@ -36,12 +36,6 @@ const router = createBrowserRouter([
   {
     path: '/contact/:userid',
     element: (
-      <SvgBackground children={<Contact/>}/>
-    )
-  },
-  {
-    path: '/contact/:userid',
-    element: (
       <SvgBackground >
         <Contact/>
       </SvgBackground>
@@ -56,7 +50,7 @@ const router = createBrowserRouter([
     )
   },
   {
-    path: '/payment/:userid',
+    path: '/materials/:profileid',
     element: (
       <StripePayment/>
     )
