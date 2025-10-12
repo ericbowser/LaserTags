@@ -3,7 +3,7 @@ import {useParams} from 'react-router-dom';
 import {Box, Card, FormControl, InputLabel, MenuItem, Select, Container} from '@mui/material';
 import Materials from "../utils/Materials";
 
-const {useLocation} = require("react-router-dom");
+import {useLocation} from "react-router-dom";
 
 const Profile = () => {
   const {userid} = useParams();

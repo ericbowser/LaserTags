@@ -1,11 +1,10 @@
 ﻿import axios from 'axios';
-
-const baseUrl = process.env.LASER_BACKEND_BASE_URL;
+import {LASER_BACKEND_BASE_URL} from '../../env.json';
 
 async function saveContact(body = {}) {
   console.log('body sending... ', body);
   try {
-    const response = await axios.post(`${baseUrl}/saveContact`, body);
+    const response = await axios.post(`${LASER_BACKEND_BASE_URL}/saveContact`, body);
     if (response.status === 201) {
       console.log('response data: ', response.data);
       return response;

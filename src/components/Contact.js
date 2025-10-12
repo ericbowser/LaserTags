@@ -1,15 +1,7 @@
 ﻿import React, {useEffect, useState} from 'react';
 import {getContact, saveContact, updateContact} from "../api/tagApi";
 import {useParams} from 'react-router-dom';
-import Form from "react-bootstrap/Form";
-import FormControl from "react-bootstrap/FormControl";
-import FloatingLabel from "react-bootstrap/FloatingLabel";
-import FormGroup from "react-bootstrap/FormGroup";
-import FormLabel from "react-bootstrap/FormLabel";
-import Container from "react-bootstrap/Container";
-import Button from "react-bootstrap/Button";
 import {useAuth} from "./Auth0/Authorize";
-import {Alert} from "react-bootstrap";
 import {isEmpty} from "lodash";
 
 const Contact = () => {
@@ -114,111 +106,158 @@ const Contact = () => {
   }
 
   return (
-    <div>
-      {error &&
-        <Alert id={'error'} name={'Error'} variant={'danger'}>
-          {error}
-        </Alert>
-      }
-      <form className={'contact-form'}
-            id={'contact-form'}
-            name={'contact-form'}
-            onSubmit={handleSubmit}>
-        <h1>Dog Tag QR Generator</h1>
-        <div>
-          
-        <span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
+            <h1 className="text-3xl font-bold text-white text-center">Dog Tag QR Generator</h1>
+            <p className="text-indigo-100 text-center mt-2">Create a digital identity for your pet</p>
+          </div>
 
-            <label id={'petname_label'}>Pet Name</label>
-            <input
-              id={'contact'}
-              type="text"
-              name="petname"
-              required={true}
-              value={contact?.petname}
-              onChange={handleChange}
-            />
-          </span>
-        </div>
-        <div>
-          
-        <span>
+          {/* Error Alert */}
+          {error && (
+            <div className="mx-8 mt-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+              <div className="flex items-center">
+                <svg className="h-5 w-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                <p className="text-red-700 font-medium">{error}</p>
+              </div>
+            </div>
+          )}
 
-            <label id={'firstname_label'}>First Name</label>
-            <input
-              id={'contact_firstname'}
-              required={true}
-              type="text"
-              name="firstname"
-              value={contact?.firstname}
-              onChange={handleChange}
-            />
-        </span>
-        </div>
-        <div>
-          
-        <span>
-            <label id={'lastname_label'}>Last Name</label>
-            <input
-              id={'contact_lastname'}
-              type="text"
-              name="lastname"
-              value={contact?.lastname}
-              onChange={handleChange}
-            />
-          </span>
-        </div>
-        <div>
-          
-        <span>
-          <label id={'address_label'}>Address</label>
-          <input
-            id={'contact_address'}
-            type="text"
-            name="address"
-            value={contact?.address}
-            onChange={handleChange}
-          />
-          </span>
-        </div>
-        <div>
-          
-        <span>
-          <label id={'phone_label'}>Phone</label>
-          <input
-            id={'contact_phone'}
-            type="phone"
-            name="phone"
-            required={true}
-            value={contact?.phone}
-            onChange={handleChange}
-          />
-        </span>
-        </div>
-        <div>
+          {/* Success Alert */}
+          {isUpdated && (
+            <div className="mx-8 mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+              <div className="flex items-center">
+                <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <p className="text-green-700 font-medium">Contact updated successfully!</p>
+              </div>
+            </div>
+          )}
 
-          <Button
-            id={'submit-contact'}
-            name={'submit'}
-            type="submit"
-            variant={'primary'}
+          {/* Form */}
+          <form
+            className="px-8 py-8 space-y-6"
+            id="contact-form"
+            name="contact-form"
+            onSubmit={handleSubmit}
           >
-          <span>
-            {contact !== null
-              ? 'Update Contact'
-              : 'Create Contact'
-            }
-          </span>
-          </Button>
+            {/* Pet Name */}
+            <div>
+              <label
+                htmlFor="contact"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Pet Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="contact"
+                type="text"
+                name="petname"
+                required={true}
+                value={contact?.petname || ''}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your pet's name"
+              />
+            </div>
+
+            {/* First Name */}
+            <div>
+              <label
+                htmlFor="contact_firstname"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                First Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="contact_firstname"
+                required={true}
+                type="text"
+                name="firstname"
+                value={contact?.firstname || ''}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your first name"
+              />
+            </div>
+
+            {/* Last Name */}
+            <div>
+              <label
+                htmlFor="contact_lastname"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Last Name
+              </label>
+              <input
+                id="contact_lastname"
+                type="text"
+                name="lastname"
+                value={contact?.lastname || ''}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your last name"
+              />
+            </div>
+
+            {/* Address */}
+            <div>
+              <label
+                htmlFor="contact_address"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Address
+              </label>
+              <input
+                id="contact_address"
+                type="text"
+                name="address"
+                value={contact?.address || ''}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your address"
+              />
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label
+                htmlFor="contact_phone"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Phone <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="contact_phone"
+                type="tel"
+                name="phone"
+                required={true}
+                value={contact?.phone || ''}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your phone number"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <button
+                id="submit-contact"
+                name="submit"
+                type="submit"
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition duration-200 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {contact !== null ? 'Update Contact' : 'Create Contact'}
+              </button>
+            </div>
+          </form>
         </div>
-        {/* <span>
-            <label>Go to Profile</label>
-          </span>*/}
-      </form>
-      {
-        isUpdated &&
-        <span id={'updated'} name={'updated'} className={'text-3xl text-green-400'}>Updated!</span>
-      }
+      </div>
     </div>
   )
 }
