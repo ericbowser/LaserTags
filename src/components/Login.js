@@ -37,8 +37,9 @@ function Login() {
       if (auth0UserId) {
         const email = user.email; // Assume email exists if user exists
         const userPayload = { // Renamed to avoid shadowing 'user' from useAuth
-          username: email,
-          userid: auth0UserId
+          username: user.name,
+          userid: auth0UserId,
+          pictureurl: user.picture
         };
 
         // Call backend login

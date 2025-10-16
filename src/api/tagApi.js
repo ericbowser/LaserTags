@@ -22,7 +22,7 @@ async function getContact(userid = null){
   console.log('body id: ', userid);
   try {
     let data = {};
-    const url = `${baseUrl}/getContact/${userid}`;
+    const url = `${LASER_BACKEND_BASE_URL}/getContact/${userid}`;
     const response = await axios.get(url);
     if (response.status === 201) {
       console.log('contact exists: ', response.data.contact);
@@ -50,7 +50,7 @@ const updateContact = async (body = {}) => {
   console.log('body sending... ', body);
   try {
     const contact =
-      await axios.post(`${baseUrl}/updateContact`, body);
+      await axios.post(`${LASER_BACKEND_BASE_URL}/updateContact`, body);
 
     return contact.data?.contactUpdated || null;
   } catch (error) {
@@ -62,7 +62,7 @@ const updateContact = async (body = {}) => {
 async function loginBackendLaser(body = {}) {
   console.log('User payload:  ', body);
   try {
-    const user = await axios.post(`${baseUrl}/login`, body);
+    const user = await axios.post(`${LASER_BACKEND_BASE_URL}/login`, body);
     console.log('user: ', user);
 
     if (user.data) {
