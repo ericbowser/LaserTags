@@ -14,10 +14,8 @@ function SvgBackground({children}) {
   }, []);
 
   return (
-    <div ref={svgRef} style={{width: '100wh', height: '100vh'}}>
-      <div style={{position: 'absolute', top: 0, left: 0, width: '100wh', height: '100vh'}}>
+    <div ref={svgRef} className={'w-screen h-screen'}>
         {children}
-      </div>
     </div>
   );
 }

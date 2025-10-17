@@ -1,19 +1,14 @@
 ﻿import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {getContact, loginBackendLaser} from '../api/tagApi';
-import Form from "react-bootstrap/Form";
-import FormControl from "react-bootstrap/FormControl";
-import FormLabel from "react-bootstrap/FormLabel";
 import Container from "react-bootstrap/Container";
-import FloatingLabel from "react-bootstrap/FloatingLabel";
 import Button from "react-bootstrap/Button";
 import {useAuth} from './Auth0/Authorize';
 import {LoginButton, LogoutButton} from "./Auth0/LoginLogoutButton";
 
 function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState(null);
-  const [password, setPassword] = useState(null);
+  const [username, setUsername] = useState(null);
   const [userid, setUserId] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -35,10 +30,9 @@ function Login() {
 
       // Check if we actually got the ID
       if (auth0UserId) {
-        const email = user.email; // Assume email exists if user exists
         const userPayload = { // Renamed to avoid shadowing 'user' from useAuth
           username: user.name,
-          userid: auth0UserId,
+          userId: auth0UserId,
           pictureurl: user.picture
         };
 
@@ -47,7 +41,7 @@ function Login() {
           .then(backendResponse => { // Use a more descriptive variable name
             console.log('Backend login successful for userid:', backendResponse?.userid); // Optional chaining for safety
             // Use data from the payload or response as appropriate
-            setEmail(userPayload.username);
+            setUsername(userPayload.username);
             setUserId(auth0UserId); // Set the ID we extracted
             setIsLoggedIn(true);
           })
@@ -68,59 +62,14 @@ function Login() {
   }, [isAuthenticated, isLoading, user]); // Make sure isLoading is in the dependency array
 
   useEffect(() => {
-  }, [email, password, spinner]);
-
-  useEffect(() => {
-  }, [email]);
-
-
-  useEffect(() => {
     if (isAuthenticated && userid) {
       navigate(`/contact/${userid}`);
     }
   }, [userid, isLoggedIn]);
 
-  const handleUsernameChange = (e) => {
-    setEmail(e.target.value);
-  };
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-  };
-
-  async function handleLoginBackendLaser(e) {
-    setIsLoggingIn(true);
-    setError('');
-
-    // Basic validation
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setIsLoggingIn(false);
-      return;
-    }
-    const loggedInUser = await loginBackendLaser(body)
-    if (loggedInUser) {
-      console.log('logged in user: ', loggedInUser);
-      setUserId(loggedInUser);
-      setIsLoggedIn(true);
-      console.log('logged in User: ', loggedInUser);
-      return loggedInUser;
-    } else {
-      setIsLoggedIn(false);
-      console.log('failed to log in');
-    }
-
-    setSpinner(false);
-    return null;
-  }
-  
-  
-
-  // Handle login button click
   async function handleLogin() {
     try {
-      const response = await login();
-      console.log('login Auth0 response: ', response);
-      await loginBackendLaser();
+      await login();
     } catch (error) {
       console.log(error);
       throw error;
@@ -148,7 +97,7 @@ function Login() {
           <div className="w-full border-t border-gray-300"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-black text-white">Or continue with email</span>
+          <span className="px-2 bg-black text-white">Or continue with user name</span>
         </div>
       </div>
       <Button
