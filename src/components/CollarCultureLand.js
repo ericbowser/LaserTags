@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+t import React, { useState } from 'react';
 import { Heart, Shield, Sparkles, Star, ChevronRight } from 'lucide-react';
 import bone from '../assets/Materials/Silicone/orange_bone.png';
 
