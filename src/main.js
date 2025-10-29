@@ -11,6 +11,7 @@ import './styles/input.css';
 import './styles/output.css';
 import { VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID } from '../env.json';
 import CollarCultureLand from "./components/CollarCultureLand";
+import MaterialSelection from "./components/MaterialSelection";
 
 // Get environment variables - making sure they're accessible
 const domain = VITE_AUTH0_DOMAIN;
@@ -27,6 +28,14 @@ const router = createBrowserRouter([
     element: (
       <div>
         <CollarCultureLand />
+      </div>
+    )
+  },
+  {
+    path: '/create-tag',
+    element: (
+      <div>
+        <MaterialSelection />
       </div>
     )
   },

@@ -24,3 +24,5 @@ ssl/*
 
 coverage/*
 env.json
+
+dist/

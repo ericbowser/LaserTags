@@ -1,21 +1,27 @@
-t import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Heart, Shield, Sparkles, Star, ChevronRight } from 'lucide-react';
 import bone from '../assets/Materials/Silicone/orange_bone.png';
+import tri from '../assets/Materials/Silicone/red_tri.jpg';
+import bar from '../assets/Materials/Silicone/blue_rect.jpg';
+import hex from '../assets/Materials/Silicone/orange_circ.jpg';
+import {useNavigate} from 'react-router-dom';
 
 function CollarCultureLand() {
   const [hoveredTag, setHoveredTag] = useState(null);
+  const navigate = useNavigate();
 
   const tagStyles = [
-    { id: 1, name: 'Classic Bone', shape: 'bone', price: 14.99, popular: true },
-    { id: 2, name: 'Heart Shape', shape: 'heart', price: 14.99, popular: false },
-    { id: 3, name: 'Circle Classic', shape: 'circle', price: 12.99, popular: false },
-    { id: 4, name: 'Star Shine', shape: 'star', price: 15.99, popular: false },
+    { id: 1, name: 'Bone', shape: 'bone', popular: true, price: 11.99 },
+    { id: 2, name: 'Tri', shape: 'tri', popular: false, price: 11.99 },
+    { id: 3, name: 'Circle', shape: 'circle', popular: false, price: 11.99 },
+    { id: 4, name: 'Bar', shape: 'rect', popular: false, price: 11.99 },
   ];
 
   const sampleEngravings = [
-    { name: 'MAX', phone: '555-0123', style: 'bold' },
-    { name: 'LUNA', phone: '555-0456', style: 'elegant' },
-    { name: 'BUDDY', phone: '555-0789', style: 'playful' },
+    { name: 'TRIGGER', phone: '555-0123', style: 'bold' },
+    { name: 'ABRAHAM', phone: '555-555-0456', style: 'elegant' },
+    { name: 'DIGGER', phone: '555-555-0789', style: 'playful' },
+    { name: 'TINKER', phone: '555-555-1234', style: 'playful' },
   ];
 
   return (
@@ -29,7 +35,7 @@ function CollarCultureLand() {
               Collar Culture
             </span>
           </div>
-          <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
+          <button onClick={() => navigate('/create-tag')} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
             Get Started
           </button>
         </div>
@@ -47,7 +53,7 @@ function CollarCultureLand() {
         <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
           Custom laser-engraved pet ID tags that last a lifetime. Beautiful designs, crystal-clear engraving, and peace of mind.
         </p>
-        <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-2xl transform hover:scale-105 transition-all inline-flex items-center gap-2">
+        <button onClick={() => navigate('/create-tag')} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-2xl transform hover:scale-105 transition-all inline-flex items-center gap-2">
           Create Your Tag
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -83,37 +89,33 @@ function CollarCultureLand() {
           {tagStyles.map((tag) => (
             <div
               key={tag.id}
+              onClick={() => navigate('/create-tag')}
               onMouseEnter={() => setHoveredTag(tag.id)}
               onMouseLeave={() => setHoveredTag(null)}
               className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:scale-105 transition-all cursor-pointer relative"
             >
-              {tag.popular && (
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
-                  <Star className="w-3 h-3" fill="currentColor" />
-                  Popular
-                </div>
-              )}
               <div className="h-64 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center p-8">
                 {tag.shape === 'bone' && (
-                  <div className="">
-                    <div >
-                      <img className={''} src={bone} alt={'orange_bone_tag'}/>
-                    </div>
-                  </div>
+                  <img src={bone} alt={'orange_bone_tag'} className="w-40 h-40 object-contain"/>
                 )}
-                {tag.shape === 'heart' && (
-                  <Heart className="w-40 h-40 text-gray-400" fill="currentColor" />
+                {tag.shape === 'tri' && (
+                  <img src={tri} alt={'triangle_tag'} className="w-40 h-40 object-contain"/>
                 )}
                 {tag.shape === 'circle' && (
-                  <div className="w-40 h-40 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full shadow-xl"></div>
+                  <img src={hex} alt={'silicone_circle'} className="w-40 h-40 object-contain"/>
                 )}
-                {tag.shape === 'star' && (
-                  <Star className="w-40 h-40 text-gray-400" fill="currentColor" />
+                {tag.shape === 'rect' && (
+                  <img src={bar} alt={'bar_tag'} className="w-40 h-40 object-contain"/>
                 )}
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-bold mb-2">{tag.name}</h3>
-                <p className="text-2xl font-bold text-purple-600">${tag.price}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-xl font-bold">{tag.name}</h3>
+                  {tag.popular && (
+                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full">Popular</span>
+                  )}
+                </div>
+                <p className="text-2xl font-bold text-purple-600">${tag.price} <span className="text-sm text-gray-500">+ shipping</span></p>
               </div>
             </div>
           ))}
@@ -155,7 +157,7 @@ function CollarCultureLand() {
         <p className="text-xl text-gray-600 mb-8">
           Create your custom tag in minutes. No design experience needed.
         </p>
-        <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-5 rounded-full text-xl font-semibold hover:shadow-2xl transform hover:scale-105 transition-all inline-flex items-center gap-2">
+        <button onClick={() => navigate('/create-tag')} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-5 rounded-full text-xl font-semibold hover:shadow-2xl transform hover:scale-105 transition-all inline-flex items-center gap-2">
           Start Designing Now
           <ChevronRight className="w-6 h-6" />
         </button>
@@ -167,10 +169,10 @@ function CollarCultureLand() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Heart className="w-6 h-6" fill="currentColor" />
-            <span className="text-xl font-bold">PawPrint Tags</span>
+            <span className="text-xl font-bold">Collar Culture Tags</span>
           </div>
           <p className="text-gray-400 mb-4">Keeping pets safe, one tag at a time.</p>
-          <p className="text-sm text-gray-500">© 2025 PawPrint Tags. All rights reserved.</p>
+          <p className="text-sm text-gray-500">© 2025 Collar Culture Tags. All rights reserved.</p>
         </div>
       </footer>
     </div>
