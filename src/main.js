@@ -9,18 +9,15 @@ import Profile from "./components/Profile";
 import {Auth0Provider} from "@auth0/auth0-react";
 import './styles/input.css';
 import './styles/output.css';
-import { VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID } from '../env.json';
+import { AUTH0_DOMAIN, AUTH0_CLIENT_ID } from '../env.json';
 import CollarCultureLand from "./components/CollarCultureLand";
 import MaterialSelection from "./components/MaterialSelection";
 
 // Get environment variables - making sure they're accessible
-const domain = VITE_AUTH0_DOMAIN;
-const clientId = VITE_AUTH0_CLIENT_ID;
-console.log(domain);
-console.log(clientId);
+const domain = AUTH0_DOMAIN;
+const clientId = AUTH0_CLIENT_ID;
 
 const url = window.URL || window.webkitURL;
-console.log('URL: ', url);
 
 const router = createBrowserRouter([
   {

@@ -26,3 +26,7 @@ coverage/*
 env.json
 
 dist/
+claude.md
+.claude
+
+src/styles/output.css

@@ -7,10 +7,10 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { CreditCard, Lock } from 'lucide-react';
-import { STRIPE_API_KEY, LASER_BACKEND_BASE_URL } from '../../env.json';
+// import { STRIPE_API_KEY, LASER_BACKEND_BASE_URL } from '../../env.json';
 import axios from 'axios';
 
-const stripePromise = loadStripe(STRIPE_API_KEY);
+// const stripePromise = loadStripe(STRIPE_API_KEY);
 
 // Calculate total: price + shipping (example: $5 shipping)
 const calculateTotal = (price) => {
