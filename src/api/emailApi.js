@@ -1,11 +1,12 @@
 ﻿import axios from 'axios';
+import {ASSIST_EMAIL_URL} from '../../env.json';
 
 async function sendEmail(emailParams = {}) {
     const {from, subject, message} = emailParams;
-    console.log('email url: ', process.env.ASSIST_EMAIL_URL)
+    console.log('email url: ', ASSIST_EMAIL_URL)
     try {
         const response = await axios.post(
-            process.env.ASSIST_EMAIL_URL,
+            ASSIST_EMAIL_URL,
             {
                 subject: subject,
                 from: from,

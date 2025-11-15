@@ -6,9 +6,9 @@ import {
     useStripe,
     useElements,
 } from '@stripe/react-stripe-js';
-import {STRIPE_API_KEY} from '../../env.json';
+// import {STRIPE_API_KEY} from '../../env.json';
 
-const stripePromise = loadStripe(STRIPE_API_KEY);
+// const stripePromise = loadStripe(STRIPE_API_KEY);
 
 const options = {
     mode: 'payment',
