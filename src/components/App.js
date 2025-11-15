@@ -4,9 +4,10 @@ import bone from '../assets/Materials/Silicone/orange_bone.png';
 import tri from '../assets/Materials/Silicone/red_tri.jpg';
 import bar from '../assets/Materials/Silicone/blue_rect.jpg';
 import hex from '../assets/Materials/Silicone/orange_circ.jpg';
+import logo from '../assets/collarculture.jpg';
 import {useNavigate} from 'react-router-dom';
 
-function CollarCultureLand() {
+function App() {
   const [hoveredTag, setHoveredTag] = useState(null);
   const navigate = useNavigate();
 
@@ -25,15 +26,28 @@ function CollarCultureLand() {
   ];
 
   return (
-    <div className={'text-center mr-24 ml-24'}>
+    <div className={'text-center mr-24 ml-24 relative'}>
+      {/* Gradient overlay - black to white gradient across the page (left to right) */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div 
+          className="absolute inset-0" 
+          style={{
+            background: 'linear-gradient(to right, #000000 0%, rgba(0, 0, 0, 0.6) 30%, rgba(255, 255, 255, 0.2) 70%, rgba(255, 255, 255, 0.05) 100%)'
+          }}
+        ></div>
+      </div>
+      
+      {/* Content */}
+      <div className="relative z-10">
       {/* Header */}
       <header className="transparent backdrop-blur-md shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Heart className="w-8 h-8 text-purple-600" fill="currentColor" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Collar Culture
-            </span>
+          <div className="flex items-center gap-3">
+            <img 
+              src={logo} 
+              alt="Collar Culture Logo" 
+              className="h-24 w-auto object-contain"
+            />
           </div>
           <button onClick={() => navigate('/create-tag')} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-2 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all">
             Get Started
@@ -167,16 +181,20 @@ function CollarCultureLand() {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Heart className="w-6 h-6" fill="currentColor" />
-            <span className="text-xl font-bold">Collar Culture Tags</span>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <img 
+              src={logo} 
+              alt="Collar Culture Logo" 
+              className="h-16 w-auto object-contain brightness-0 invert"
+            />
           </div>
           <p className="text-gray-400 mb-4">Keeping pets safe, one tag at a time.</p>
           <p className="text-sm text-gray-500">© 2025 Collar Culture Tags. All rights reserved.</p>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
 
-export default CollarCultureLand;
+export default App;

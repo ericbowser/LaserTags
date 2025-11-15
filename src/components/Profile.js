@@ -80,19 +80,6 @@ const Profile = () => {
     </Container>
 
   );
-  /* <Form>
-     <Form.Group controlId="formMaterialSelect">
-       <Form.Label>Materials</Form.Label>
-       <Form.Select onSelect={handleSelect}>
-         ['Stainless Steel', 'Wood', 'Plastic', 'Metal', 'Other'].map(material => {
-           <option>{material}</option>
-         })
-       </Form.Select>
-
-     </Form.Group>
-
-   </Form>
-  );*/
 }
 
 export default Profile;

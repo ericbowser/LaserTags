@@ -1,8 +1,6 @@
 ﻿import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {getContact, loginBackendLaser} from '../api/tagApi';
-import Container from "react-bootstrap/Container";
-import Button from "react-bootstrap/Button";
 import {useAuth} from './Auth0/Authorize';
 import {LoginButton, LogoutButton} from "./Auth0/LoginLogoutButton";
 
@@ -85,7 +83,7 @@ function Login() {
   }*/
 
   return (
-    <Container className={'m-52 p-4 text-white bolder bg-black border-2 backdrop-contrast-75'}>
+    <div className={'m-52 p-4 text-white bolder bg-black border-2 backdrop-contrast-75'}>
       {/* Auth0 Login Button */}
       <div className="mb-5">
         <h3 className="mb-3">Sign in with Social Media</h3>
@@ -100,16 +98,16 @@ function Login() {
           <span className="px-2 bg-black text-white">Or continue with user name</span>
         </div>
       </div>
-      <Button
+      <button
         id={'Login'}
         type="submit"
         onClick={handleLogin}
         className={'mt-4 align-middle p-2 mr-2 flex justify-center border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 '}
       >
         Register / Sign In
-      </Button>
+      </button>
       <LogoutButton/>
-    </Container>
+    </div>
   );
 }
 

@@ -21,6 +21,7 @@ src/output.css
 .flaskenv*
 
 ssl/*
+ssl/
 
 coverage/*
 env.json
