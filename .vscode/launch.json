@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch Chrome - Localhost",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://localhost:31666",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
             "command": "npm run dev",
             "name": "Run npm run dev",
             "request": "launch",

@@ -13,6 +13,7 @@ import { VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID } from "../env.json";
 import App from "./components/App";
 import MaterialSelection from "./components/MaterialSelection";
 import QrcodeGenerator from "./components/QrcodeGenerator";
+import OrderSuccess from "./components/OrderSuccess";
 
 // Get environment variables - making sure they're accessible
 const domain = VITE_AUTH0_DOMAIN;
@@ -73,6 +74,14 @@ const router = createBrowserRouter([
     element: (
       <div>
         <QrcodeGenerator />
+      </div>
+    ),
+  },
+  {
+    path: "/order-success",
+    element: (
+      <div>
+        <OrderSuccess />
       </div>
     ),
   },

@@ -2,14 +2,15 @@
 import {ASSIST_EMAIL_URL} from '../../env.json';
 
 async function sendEmail(emailParams = {}) {
-    const {from, subject, message} = emailParams;
+    const {from, to, subject, message} = emailParams;
     console.log('email url: ', ASSIST_EMAIL_URL)
     try {
         const response = await axios.post(
             ASSIST_EMAIL_URL,
             {
-                subject: subject,
                 from: from,
+                to: to,
+                subject: subject,
                 message: message
             },
             {

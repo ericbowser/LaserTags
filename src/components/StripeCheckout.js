@@ -7,20 +7,30 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { CreditCard, Lock } from 'lucide-react';
-// import { STRIPE_API_KEY, LASER_BACKEND_BASE_URL } from '../../env.json';
+import { STRIPE_API_KEY, LASER_BACKEND_BASE_URL } from '../../env.json';
 import axios from 'axios';
+import { sendEmail, updateOrderPayment } from '../api/tagApi';
 
-// const stripePromise = loadStripe(STRIPE_API_KEY);
+// Validate Stripe API key format
+if (!STRIPE_API_KEY) {
+  console.error('STRIPE_API_KEY is not defined in env.json');
+} else if (!STRIPE_API_KEY.startsWith('pk_test_') && !STRIPE_API_KEY.startsWith('pk_live_')) {
+  console.error('Invalid Stripe API key format. Test keys should start with pk_test_, live keys with pk_live_');
+} else if (STRIPE_API_KEY.startsWith('pk_live_')) {
+  console.warn('⚠️ WARNING: Using LIVE Stripe API key. Switch to pk_test_ for sandbox/testing.');
+} else {
+  console.log('✓ Using Stripe TEST/SANDBOX API key (pk_test_)');
+}
+
+const stripePromise = loadStripe(STRIPE_API_KEY);
 
 // Calculate total: price + shipping (example: $5 shipping)
 const calculateTotal = (price) => {
   return Math.round((price + 5) * 100); // Convert to cents
 };
 
-const options = (amount) => ({
-  mode: 'payment',
-  amount: amount,
-  currency: 'usd',
+const options = (clientSecret) => ({
+  clientSecret,
   appearance: {
     theme: 'stripe',
     variables: {
@@ -41,28 +51,130 @@ const StripeCheckout = ({ orderData, onSuccess, onCancel }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Validate Stripe API key before proceeding
+    if (!STRIPE_API_KEY || !STRIPE_API_KEY.startsWith('pk_test_')) {
+      setError('Invalid or missing Stripe test API key. Please check your configuration.');
+      setIsLoading(false);
+      return;
+    }
+
     // Create payment intent on component mount
     const createPaymentIntent = async () => {
       try {
         const amount = calculateTotal(orderData.material.price);
         
-        const response = await axios.post(`${LASER_BACKEND_BASE_URL}/create-payment-intent`, {
-          amount: amount,
+        console.log('Creating payment intent:', {
+          url: `${LASER_BACKEND_BASE_URL}/stripePayment`,
+          amount,
           currency: 'usd',
-          orderData: orderData,
+          contactid: orderData.contactid,
+          orderid: orderData.orderid
         });
+        
+        // Backend expects contactid and orderid
+        if (!orderData.contactid) {
+          throw new Error('contactid is required but missing from orderData');
+        }
+        if (!orderData.orderid) {
+          throw new Error('orderid is required but missing from orderData. Order must be created first.');
+        }
+        
+        const response = await axios.post(
+          `${LASER_BACKEND_BASE_URL}/stripePayment`,
+          {
+            amount: amount,
+            currency: 'usd',
+            contactid: orderData.contactid,
+            orderid: orderData.orderid,
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000, // 10 second timeout
+          }
+        );
+
+        console.log('Payment intent response:', response.data);
+
+        if (!response.data?.clientSecret) {
+          throw new Error('No clientSecret received from backend. Response: ' + JSON.stringify(response.data));
+        }
+
+        // Extract payment intent ID from response
+        const paymentIntentId = response.data.paymentIntentId || response.data.id;
+        
+        // Update order with payment intent ID
+        if (paymentIntentId && orderData.orderid) {
+          try {
+            await updateOrderPayment({
+              orderid: orderData.orderid,
+              stripe_payment_intent_id: paymentIntentId,
+            });
+            console.log('Order updated with payment intent ID:', paymentIntentId);
+          } catch (updateError) {
+            // Log error but don't block payment flow
+            console.error('Failed to update order with payment intent ID:', updateError);
+          }
+        } else {
+          console.warn('Payment intent ID not found in response:', response.data);
+        }
 
         setClientSecret(response.data.clientSecret);
         setIsLoading(false);
       } catch (err) {
-        setError('Failed to initialize payment. Please try again.');
         setIsLoading(false);
-        console.error('Payment intent error:', err);
+        
+        // Provide more detailed error messages
+        let errorMessage = 'Failed to initialize payment. ';
+        
+        if (err.code === 'ECONNREFUSED' || err.message.includes('Network Error')) {
+          errorMessage += 'Cannot connect to backend server. Please ensure the backend is running on port 3003.';
+        } else if (err.response) {
+          // Backend responded with error status
+          const status = err.response.status;
+          const data = err.response.data;
+          
+          if (status === 404) {
+            errorMessage += 'Payment endpoint not found. Please check if /create-payment-intent exists on the backend.';
+          } else if (status === 500) {
+            errorMessage += 'Backend server error. Check backend logs for details.';
+          } else if (status === 401 || status === 403) {
+            errorMessage += 'Authentication failed. Check Stripe secret key configuration.';
+          } else {
+            errorMessage += `Backend error (${status}): ${data?.message || data?.error || JSON.stringify(data)}`;
+          }
+          
+          console.error('Backend error response:', {
+            status,
+            data,
+            headers: err.response.headers
+          });
+        } else if (err.request) {
+          // Request was made but no response received
+          errorMessage += 'No response from backend server. Check if backend is running and accessible.';
+          console.error('No response received:', err.request);
+        } else {
+          // Something else happened
+          errorMessage += err.message || 'Unknown error occurred.';
+        }
+        
+        setError(errorMessage);
+        console.error('Payment intent error details:', {
+          message: err.message,
+          code: err.code,
+          response: err.response?.data,
+          request: err.request,
+          fullError: err
+        });
       }
     };
 
     createPaymentIntent();
   }, [orderData]);
+  
+  // Pass clientSecret to CheckoutForm
+  const stripeCheckoutProps = { clientSecret };
 
   if (isLoading) {
     return (
@@ -104,12 +216,10 @@ const StripeCheckout = ({ orderData, onSuccess, onCancel }) => {
           </div>
 
           <div className="p-8">
-            <Elements
-              stripe={stripePromise}
-              options={options(calculateTotal(orderData.material.price))}
-            >
+            <Elements stripe={stripePromise} options={options(clientSecret)}>
               <CheckoutForm
                 orderData={orderData}
+                clientSecret={clientSecret}
                 onSuccess={onSuccess}
                 onCancel={onCancel}
               />
@@ -121,7 +231,7 @@ const StripeCheckout = ({ orderData, onSuccess, onCancel }) => {
   );
 };
 
-const CheckoutForm = ({ orderData, onSuccess, onCancel }) => {
+const CheckoutForm = ({ orderData, clientSecret, onSuccess, onCancel }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -130,7 +240,7 @@ const CheckoutForm = ({ orderData, onSuccess, onCancel }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !clientSecret) {
       return;
     }
 
@@ -145,12 +255,37 @@ const CheckoutForm = ({ orderData, onSuccess, onCancel }) => {
       return;
     }
 
-    // In a real app, you would get the clientSecret from your server
-    // For now, we'll need the parent to handle payment confirmation
-    
-    // The payment confirmation should happen on the backend
-    // After successful payment, redirect to success page
-    onSuccess();
+    // Confirm payment with Stripe
+    const { error: confirmError } = await stripe.confirmPayment({
+      elements,
+      clientSecret,
+      confirmParams: {
+        return_url: `${window.location.origin}/order-success`,
+      },
+      redirect: 'if_required', // Only redirect if required by payment method
+    });
+
+    if (confirmError) {
+      // Payment failed
+      setErrorMessage(confirmError.message);
+      setIsProcessing(false);
+    } else {
+      // Payment succeeded - send email notification
+      // Backend will fetch order/contact details and generate email body
+      try {
+        await sendEmail({
+          orderid: orderData.orderid,
+          contactid: orderData.contactid,
+          email: orderData.notificationEmail || orderData.contactInfo?.email,
+        });
+        console.log('Email sent successfully after payment');
+      } catch (emailError) {
+        // Log error but don't block success flow
+        console.error('Failed to send email after payment:', emailError);
+      }
+      
+      onSuccess();
+    }
   };
 
   const subtotal = orderData.material.price;
