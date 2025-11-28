@@ -465,7 +465,8 @@ function MaterialSelection() {
       has_qr_code: hasQrCode,
       amount: Math.round(selectedMaterial.price * 100),
       currency: "usd",
-      stripe_payment_intent_id: "pending",
+      stripe_payment_intent_id: null,
+      status: "pending",
     });
 
     if (!orderid) {

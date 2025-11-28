@@ -104,21 +104,9 @@ const StripeCheckout = ({ orderData, onSuccess, onCancel }) => {
         // Extract payment intent ID from response
         const paymentIntentId = response.data.paymentIntentId || response.data.id;
         
-        // Update order with payment intent ID
-        if (paymentIntentId && orderData.orderid) {
-          try {
-            await updateOrderPayment({
-              orderid: orderData.orderid,
-              stripe_payment_intent_id: paymentIntentId,
-            });
-            console.log('Order updated with payment intent ID:', paymentIntentId);
-          } catch (updateError) {
-            // Log error but don't block payment flow
-            console.error('Failed to update order with payment intent ID:', updateError);
-          }
-        } else {
-          console.warn('Payment intent ID not found in response:', response.data);
-        }
+        // Payment intent ID will be updated by webhook
+        console.log('Payment intent created:', paymentIntentId, 'for order:', orderData.orderid);
+        console.log('Webhook will update order with payment intent ID');
 
         setClientSecret(response.data.clientSecret);
         setIsLoading(false);
