@@ -1,6 +1,4 @@
 
-.env*
-.flaskenv*
 !.env.project
 !.env.vault
 
@@ -8,3 +6,28 @@ node_modules/
 build/
 
 .idea/.codiumai
+.idea/
+
+.run/
+
+.env
+.env.me
+.env.previous
+
+src/output.css
+./src/output.css
+
+.env*
+.flaskenv*
+
+ssl/*
+ssl/
+
+coverage/*
+env.json
+
+dist/
+claude.md
+.claude
+
+src/styles/output.css

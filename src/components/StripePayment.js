@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {loadStripe} from '@stripe/stripe-js';
 import {
     PaymentElement,
@@ -6,7 +6,9 @@ import {
     useStripe,
     useElements,
 } from '@stripe/react-stripe-js';
-const stripePromise = loadStripe('pk_test_6pRNASCoBOKtIshFeQd4XMUh');
+// import {STRIPE_API_KEY} from '../../env.json';
+
+// const stripePromise = loadStripe(STRIPE_API_KEY);
 
 const options = {
     mode: 'payment',

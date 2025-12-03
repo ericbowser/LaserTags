@@ -1,118 +1,114 @@
 ﻿import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {login} from '../api/tagApi';
-import sendEmail from "../api/emailApi";
-import '../output.css';
-import SvgComponent from "./SvgImage";
+import {getContact, loginBackendLaser} from '../api/tagApi';
+import {useAuth} from './Auth0/Authorize';
+import {LoginButton, LogoutButton} from "./Auth0/LoginLogoutButton";
 
 function Login() {
-    const [email, setEmail] = useState(null);
-    const [password, setPassword] = useState(null);
-    const [userid, setUserId] = useState(null);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [alreadyHasAccount, setAlreadyHasAccount] = useState(null);
-    const [spinner, setSpinner] = useState(false);
-    const [emailSent, setEmailSent] = useState(false);
+  const navigate = useNavigate();
+  const [username, setUsername] = useState(null);
+  const [userid, setUserId] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [spinner, setSpinner] = useState(false);
+  const [error, setError] = useState(false);
 
-    const navigate = useNavigate();
+  // Auth0 hook to get authentication status and user info
+  const {login, isAuthenticated, isLoading, user} = useAuth();
 
-    useEffect(() => {
-    }, [email, password, spinner, alreadyHasAccount]);
-    
-    useEffect(() => {
-    }, [email]);
-    
-   async function sendTheEmail() {
-       const emailSent = await sendEmail(email); 
-       console.log('email sent: ', emailSent);
-       if (emailSent) {
-           setEmailSent(true);
-       }
-       setEmailSent(false);
-    }
+  // Login.js
+  useEffect(() => {
+    // Add logging to see the state right when the effect runs in the test
+    console.log('Login Effect Check:', { isAuthenticated, isLoading, userExists: !!user, userSub: user?.sub });
 
-    useEffect(() => {
-        if (userid) {
-            navigate(`/contact/${userid}`)
-        }
-    }, [userid, isLoggedIn]);
-   
-    const handleUsernameChange = (e) => {
-        setEmail(e.target.value);
-    };
-    const handlePasswordChange = (e) => {
-        setPassword(e.target.value);
-    };
-    
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const body = {
-            email,
-            password
+    if (isAuthenticated && !isLoading && user) {
+      // Use optional chaining to safely access 'sub' and then split
+      const subParts = user?.sub?.split('|'); // Safely split user.sub if it exists
+      const auth0UserId = subParts?.[1]; // Get the second part if split was successful
+
+      // Check if we actually got the ID
+      if (auth0UserId) {
+        const userPayload = { // Renamed to avoid shadowing 'user' from useAuth
+          username: user.name,
+          userId: auth0UserId,
+          pictureurl: user.picture
         };
-        const loggedInUser = await login(body)
-        if (loggedInUser.data) {
-            console.log('logged in user: ', loggedInUser);
-            setUserId(loggedInUser.data.userid);
-            return loggedInUser;
-        }
 
-        console.log(loggedInUser);
-        setSpinner(false);
-        return null;
-    };
+        // Call backend login
+        loginBackendLaser(userPayload)
+          .then(backendResponse => { // Use a more descriptive variable name
+            console.log('Backend login successful for userid:', backendResponse?.userid); // Optional chaining for safety
+            // Use data from the payload or response as appropriate
+            setUsername(userPayload.username);
+            setUserId(auth0UserId); // Set the ID we extracted
+            setIsLoggedIn(true);
+          })
+          .catch(error => {
+            // Handle potential errors from the backend login
+            console.error('Backend login failed:', error);
+            setError('Failed to sync login with backend.'); // Set an error state for the user
+            setIsLoggedIn(false); // Ensure state is correct on error
+          });
+      } else {
+        // Handle the case where user.sub was missing or didn't have the expected format
+        console.error("Could not extract auth0UserId from user.sub:", user?.sub);
+        setError("There was an issue processing your user profile."); // Inform the user
+        setIsLoggedIn(false);
+      }
+    }
+    // Add isLoading to dependencies if its change should re-trigger the effect
+  }, [isAuthenticated, isLoading, user]); // Make sure isLoading is in the dependency array
 
+  useEffect(() => {
+    if (isAuthenticated && userid) {
+      navigate(`/contact/${userid}`);
+    }
+  }, [userid, isLoggedIn]);
+
+  async function handleLogin() {
+    try {
+      await login();
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  /*if (isLoading) {
     return (
-/*
-        <div>
-
-            <SvgComponent />
-        </div>
-*/
-        <div className="bg-gray-800 min-h-screen flex items-center justify-center">
-            <div className="bg-white p-8 rounded-lg w-full max-w-screen-md border-black border-2 shadow-lg shadow-blue-700">
-                <form className="space-y-6 py-8" onSubmit={handleSubmit}>
-                    <div className="flex items-center space-x-4">
-                        <label htmlFor="email" className="w-32 block text-xl font-medium text-gray-700">
-                           Email 
-                        </label>
-                        <input
-                            onChange={handleUsernameChange}
-                            type="email"
-                            id="email"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            required
-                        />
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        <label htmlFor="password" className="w-32 block text-xl font-medium text-gray-700">
-                            Password
-                        </label>
-                        <input
-                            onChange={handlePasswordChange}
-                            type="password"
-                            id="password"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                            required
-                        />
-                    </div>
-                    <div className={'flex m-28'}>
-                        <button
-                            type="submit"
-                            disabled={!email || !password || email.trim() === '' || password.trim() === ''}
-                            className={`align-middle p-2 mr-2 flex justify-center border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                                !email || !password || email.trim() === '' || password.trim() === ''
-                                    ? 'opacity-50 cursor-not-allowed'
-                                    : ''
-                            }`}
-                        >
-                            Sign In
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+      <Container className="m-52 p-4 text-white bolder bg-black border-2 backdrop-contrast-75">
+        <div>Loading authentication status...</div>
+      </Container>
     );
+  }*/
+
+  return (
+    <div className={'m-52 p-4 text-white bolder bg-black border-2 backdrop-contrast-75'}>
+      {/* Auth0 Login Button */}
+      <div className="mb-5">
+        <h3 className="mb-3">Sign in with Social Media</h3>
+        <LoginButton/>
+      </div>
+
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-black text-white">Or continue with user name</span>
+        </div>
+      </div>
+      <button
+        id={'Login'}
+        type="submit"
+        onClick={handleLogin}
+        className={'mt-4 align-middle p-2 mr-2 flex justify-center border border-transparent text-lg font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 '}
+      >
+        Register / Sign In
+      </button>
+      <LogoutButton/>
+    </div>
+  );
 }
 
 export default Login;

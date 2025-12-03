@@ -1,13 +1,12 @@
-﻿import QRCode from 'qrcode.react';
+﻿import {QRCodeSVG} from 'qrcode.react';
 import React, {useEffect, useState} from 'react';
-import saveContact from '../api/tagApi';
 
 const QrcodeData = (userid) => {
     const [savedUrl, setSavedUrl] = useState(null);
     
     async function getUrl() {
         try {
-            if(userid) {
+            if(userid) {y
                 console.log('returned url: ', userid);
                 setSavedUrl(`http://localhost:31666/${userid}`);
             }
@@ -28,7 +27,7 @@ const QrcodeData = (userid) => {
             <div>
                 {savedUrl &&
                     <div className="mt-8">
-                        <QRCode
+                        <QRCodeSVG
                             value={savedUrl}
                             color={'green'}
                             size={150}
