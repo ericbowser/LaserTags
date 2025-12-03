@@ -11,6 +11,9 @@ module.exports = {
             backgroundImage: {
                 'back': "url('/src/assets/circle-scatter-haikei.svg')",
             },
+            anotherBackgrounImage: {
+                'back': "url('')",
+            },
         },
     },
     plugins: [

@@ -1,187 +1,285 @@
-﻿import React, {useEffect, useState} from 'react';
-import {getContact, saveContact, updateContact} from "../api/tagApi";
-import {isEmpty} from "lodash";
-import QrcodeData from "./Qrcode";
-import {useParams} from 'react-router-dom';
-import Container from "react-bootstrap/Container";
-import {Form} from "react-bootstrap";
+﻿import React, { useEffect, useState } from "react";
+import { getContact, saveContact, updateContact } from "../api/tagApi";
+import { useParams } from "react-router-dom";
+import { useAuth } from "./Auth0/Authorize";
+import { isEmpty } from "lodash";
 
 const Contact = () => {
-  const {userid} = useParams();
-  console.log('user id: ', userid);
-  const [allFieldsSet, setAllFieldsSet] = useState(false);
+  const { user, isAuthenticated, saveContactToAuth0 } = useAuth();
+  const { userid } = useParams();
+  console.log("userid passed in from params: ", userid);
+
   const [needsCreated, setNeedsCreated] = useState(null);
+  const [navigateProfile, setNavigateProfile] = useState(false);
+  const [allFieldsSet, setAllFieldsSet] = useState(false);
   const [saved, setSaved] = useState(false);
   const [update, setUpdate] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
-  const [userId, setUserId] = useState(userid.toString() || null);
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(null);
+  const [contact, setContact] = useState(null);
 
-  console.log('User Id ', userId);
-  const [formData, setFormData] = useState({
-    petname: '',
-    firstname: '',
-    lastname: '',
-    phone: '',
-    address: '',
-  });
+  useEffect(() => {}, [allFieldsSet, saved, contact]);
 
-  const checkFormData = () => {
-    const exists = Boolean(formData.address !== ''
-      && formData.firstname !== ''
-      && formData.lastname !== ''
-      && formData.phone !== '');
-    return exists;
-  }
-
-  const queryContact = async () => {
-    try {
-      const contact = await getContact(userId)
-      console.log('get contact response: ', contact);
-      if (contact) {
-        return contact;
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  function setCurrentContact(contact) {
-    setNeedsCreated(false);
-    setFormData(contact.contact);
-    setUserId(contact.contact.userid);
-    setUpdate(true);
-    console.log('set user id: ', contact.contact.userid);
-  }
-
-  useEffect(() => {
-    const formData = checkFormData();
-    if (!formData && userId && !needsCreated) {
-      queryContact()
-        .then(contact => {
-          if (contact.status === 204) {
-            setNeedsCreated(true);
-          } else if (contact.status === 201) {
-            const contactData = contact.contact;
-            setCurrentContact(contactData)
-          }
-        });
-    }
-  }, [userId, formData, needsCreated]);
-
-  useEffect(() => {
-  }, [formData, allFieldsSet, saved, needsCreated, update, isUpdated, userId]);
-
+  /* useEffect(() => {
+     if (isAuthenticated && user) {
+       const auth0UserId = user.sub.split('|')[1];
+       getContact(auth0UserId).then(contact => {
+         if (contact.exists) {
+           setContact(contact.contact);
+           setError(null);
+         } else {
+           setNeedsCreated(true);
+           setError(null);
+         }
+       }).catch(error => {
+         console.log(error);
+         setError(error);
+       });
+     }
+   }, [isAuthenticated, user]);
+ */
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setContact({
+      ...contact,
       [e.target.name]: e.target.value,
     });
   };
 
+  function setCurrentContact(contact) {
+    setNeedsCreated(false);
+    setContact(contact);
+    setError(null);
+  }
+
+  /* const handleSubmit = async (e) => {
+     e.preventDefault();
+     setIsSubmitting(true);
+     setError(null);
+     setSaved(false);
+ 
+     try {
+       // Validate form data
+       if (!contact.petname || !contact.firstname || !contact.phone || !contact.address) {
+         setError('Please fill out all required fields');
+         setIsSubmitting(false);
+         return;
+       }
+       // Save data to Auth0 user metadata
+       await saveContactToAuth0(contact);
+       await saveContact(contact);
+       setSaved(true);
+     } catch (err) {
+       console.error('Error saving contact:', err);
+       setError('Failed to save contact information. Please try again.');
+     } finally {
+       setIsSubmitting(false);
+     }
+   };*/
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isEmpty(userId)
-      && !isEmpty(formData.firstname)
-      && !isEmpty(formData.petname)
-      && (!isEmpty(formData.phone) && !isEmpty(formData.address))
-    ) {
-      const request = {
-        userid: userId,
-        ...formData
-      };
-      console.log('request', request);
-      if (update) {
-        try {
-          const updateResponse = await updateContact(formData);
-          if (updateResponse) {
-            setIsUpdated(true);
-          }
-        } catch (err) {
-          console.log(err);
+    const request = {
+      userid,
+      ...contact,
+    };
+    console.log("request", request);
+    if (update) {
+      try {
+        const updateResponse = await updateContact(contact);
+        if (updateResponse) {
+          setIsUpdated(true);
         }
-      } else if (!update) {
-        const contact = await saveContact(request);
-        if (contact) {
-          console.log('Saved Response: ', contact);
-          setSaved(true);
-          setUserId(contact?.userid);
-        }
+      } catch (err) {
+        console.log(err);
+        setError(err);
       }
     } else {
-      setAllFieldsSet(false);
+      const contact = await saveContact(request);
+      if (contact) {
+        console.log("Saved Response: ", contact);
+        setSaved(true);
+      }
     }
   };
 
   return (
-    <Container>
-      <Form.FloatingLabel>Dog Tag QR Generator</Form.FloatingLabel>
-      <Form className={'text-white'}
-            onSubmit={handleSubmit}>
-        <Form.Group>
-          <Form.Label>Pet Name</Form.Label>
-          <Form.Control
-            type="text"
-            as="input"
-            name="petname"
-            required={true}
-            value={formData.petname}
-            onChange={handleChange}
-          />
-          <Form.Label>First Name</Form.Label>
-          <Form.Control
-            required={true}
-            type="text"
-            as="input"
-            name="firstname"
-            value={formData.firstname}
-            onChange={handleChange}
-          />
-          <Form.Label>Last Name</Form.Label>
-          <Form.Control
-            type="text"
-            as="input"
-            name="lastname"
-            value={formData.lastname}
-            onChange={handleChange}
-          />
-          <Form.Label>Address</Form.Label>
-          <Form.Control
-            type="text"
-            as="input"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-          />
-          <Form.Label>Phone</Form.Label>
-          <Form.Control
-            type="phone"
-            as="input"
-            name="phone"
-            required={true}
-            value={formData.phone}
-            onChange={handleChange}
-          />
-        </Form.Group>
-        <button
-          type="submit"
-          className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md"
-        >
-          {update === true ? 'Update' : 'Create Contact Info'}
-        </button>
-      </Form>
-      {
-        saved &&
-        <div>
-          <QrcodeData userid={userid}/>
-          <span className={'text-3xl text-green-400'}>Saved!</span>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
+            <h1 className="text-3xl font-bold text-white text-center">
+              Dog Tag QR Generator
+            </h1>
+            <p className="text-indigo-100 text-center mt-2">
+              Create a digital identity for your pet
+            </p>
+          </div>
+
+          {/* Error Alert */}
+          {error && (
+            <div className="mx-8 mt-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+              <div className="flex items-center">
+                <svg
+                  className="h-5 w-5 text-red-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p className="text-red-700 font-medium">{error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Success Alert */}
+          {isUpdated && (
+            <div className="mx-8 mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+              <div className="flex items-center">
+                <svg
+                  className="h-5 w-5 text-green-500 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p className="text-green-700 font-medium">
+                  Contact updated successfully!
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Form */}
+          <form
+            className="px-8 py-8 space-y-6"
+            id="contact-form"
+            name="contact-form"
+            onSubmit={handleSubmit}
+          >
+            {/* Pet Name */}
+            <div>
+              <label
+                htmlFor="contact"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Pet Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="contact"
+                type="text"
+                name="petname"
+                required={true}
+                value={contact?.petname || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your pet's name"
+              />
+            </div>
+
+            {/* First Name */}
+            <div>
+              <label
+                htmlFor="contact_firstname"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                First Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="contact_firstname"
+                required={true}
+                type="text"
+                name="firstname"
+                value={contact?.firstname || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your first name"
+              />
+            </div>
+
+            {/* Last Name */}
+            <div>
+              <label
+                htmlFor="contact_lastname"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Last Name
+              </label>
+              <input
+                id="contact_lastname"
+                type="text"
+                name="lastname"
+                value={contact?.lastname || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your last name"
+              />
+            </div>
+
+            {/* Address */}
+            <div>
+              <label
+                htmlFor="contact_address"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Address
+              </label>
+              <input
+                id="contact_address"
+                type="text"
+                name="address"
+                value={contact?.address || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your address"
+              />
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label
+                htmlFor="contact_phone"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Phone <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="contact_phone"
+                type="tel"
+                name="phone"
+                required={true}
+                value={contact?.phone || ""}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                placeholder="Enter your phone number"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-4">
+              <button
+                id="submit-contact"
+                name="submit"
+                type="submit"
+                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition duration-200 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {contact !== null ? "Update Contact" : "Create Contact"}
+              </button>
+            </div>
+          </form>
         </div>
-      }
-      {
-        isUpdated &&
-        <span className={'text-3xl text-green-400'}>Updated!</span>
-      }
-    </Container>
-  )
-}
+      </div>
+    </div>
+  );
+};
 
 export default Contact;
