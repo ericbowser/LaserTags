@@ -1,0 +1,11 @@
+[
+  {
+    "key": "ctrl+-",
+    "command": "workbench.action.navigateBack"
+  },
+  {
+    "key": "ctrl+=",
+    "command": "workbench.action.navigateForward"
+  }
+]
+

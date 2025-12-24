@@ -103,6 +103,8 @@ const TagPreview = ({
         return { width: baseSize, height: baseSize * 0.9 };
       case 'rect':
         return { width: baseSize * 1.3, height: baseSize * 0.6 };
+      case 'hex':
+        return { width: baseSize, height: baseSize };
       case 'circle':
       default:
         return { width: baseSize, height: baseSize };
@@ -219,6 +221,8 @@ const TagPreview = ({
                   ? 'polygon(50% 0%, 0% 100%, 100% 100%)'
                   : material?.shape === 'circle'
                   ? 'circle(50%)'
+                  : material?.shape === 'hex'
+                  ? 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
                   : 'none',
                 borderRadius: material?.shape === 'circle' ? '50%' : '8px',
               }}
@@ -239,6 +243,8 @@ const TagPreview = ({
                   ? 'polygon(50% 0%, 0% 100%, 100% 100%)'
                   : material?.shape === 'circle'
                   ? 'circle(50%)'
+                  : material?.shape === 'hex'
+                  ? 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
                   : 'none',
                 borderRadius: material?.shape === 'circle' ? '50%' : '8px',
               }}

@@ -3,14 +3,15 @@ import {LASER_BACKEND_BASE_URL} from '../../env.json';
 
 async function saveContact(body = {}) {
   console.log('saveContact - body being sent to backend:', JSON.stringify(body, null, 2));
-  console.log('saveContact - field breakdown:', {
+  console.log('saveContact - field breakdown (contact table fields):', {
     firstname: body.firstname,
     lastname: body.lastname,
     fullname: body.fullname,
     petname: body.petname,
     phone: body.phone,
-    address: body.address,
-    address_length: body.address?.length || 0
+    address_line_1: body.address_line_1,
+    address_line_2: body.address_line_2,
+    address_line_3: body.address_line_3,
   });
   
   try {
@@ -36,8 +37,8 @@ async function saveContact(body = {}) {
   }
 }
 
-async function getContact(userid = null){
-  console.log('body id: ', userid);
+async function getContact(contactid = null){
+  console.log('body id: ', contactid);
   try {
     let data = {};
     const url = `${LASER_BACKEND_BASE_URL}/getContact/${userid}`;

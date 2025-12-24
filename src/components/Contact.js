@@ -3,6 +3,7 @@ import { getContact, saveContact, updateContact } from "../api/tagApi";
 import { useParams } from "react-router-dom";
 import { useAuth } from "./Auth0/Authorize";
 import { isEmpty } from "lodash";
+import DarkModeToggle from "./DarkModeToggle";
 
 const Contact = () => {
   const { user, isAuthenticated, saveContactToAuth0 } = useAuth();
@@ -38,7 +39,6 @@ const Contact = () => {
        });
      }
    }, [isAuthenticated, user]);
- */
   const handleChange = (e) => {
     setContact({
       ...contact,
@@ -104,22 +104,25 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-pastel dark:bg-gradient-pastel-dark py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-pastel-cream dark:bg-dark-surface rounded-2xl shadow-xl overflow-hidden border border-pastel-lavender/30 dark:border-dark-border/30">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
+          <div className="bg-gradient-to-r from-pastel-coral to-pastel-rose dark:from-pastel-mauve dark:to-pastel-lilac px-8 py-6 relative">
+            <div className="absolute top-4 right-4">
+              <DarkModeToggle />
+            </div>
             <h1 className="text-3xl font-bold text-white text-center">
               Dog Tag QR Generator
             </h1>
-            <p className="text-indigo-100 text-center mt-2">
+            <p className="text-white/90 text-center mt-2">
               Create a digital identity for your pet
             </p>
           </div>
 
           {/* Error Alert */}
           {error && (
-            <div className="mx-8 mt-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+            <div className="mx-8 mt-6 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 p-4 rounded-r-lg">
               <div className="flex items-center">
                 <svg
                   className="h-5 w-5 text-red-500 mr-2"
@@ -132,14 +135,14 @@ const Contact = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                <p className="text-red-700 font-medium">{error}</p>
+                <p className="text-red-700 dark:text-red-300 font-medium">{error}</p>
               </div>
             </div>
           )}
 
           {/* Success Alert */}
           {isUpdated && (
-            <div className="mx-8 mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+            <div className="mx-8 mt-6 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 dark:border-green-400 p-4 rounded-r-lg">
               <div className="flex items-center">
                 <svg
                   className="h-5 w-5 text-green-500 mr-2"
@@ -152,7 +155,7 @@ const Contact = () => {
                     clipRule="evenodd"
                   />
                 </svg>
-                <p className="text-green-700 font-medium">
+                <p className="text-green-700 dark:text-green-300 font-medium">
                   Contact updated successfully!
                 </p>
               </div>
@@ -170,7 +173,7 @@ const Contact = () => {
             <div>
               <label
                 htmlFor="contact"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-dark-text mb-2"
               >
                 Pet Name <span className="text-red-500">*</span>
               </label>
@@ -181,7 +184,7 @@ const Contact = () => {
                 required={true}
                 value={contact?.petname || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                className="w-full px-4 py-3 border border-pastel-lavender/40 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-pastel-coral dark:focus:ring-pastel-rose focus:border-transparent transition duration-200 ease-in-out hover:border-pastel-coral dark:hover:border-pastel-rose bg-white dark:bg-dark-surfaceLight text-gray-800 dark:text-dark-text"
                 placeholder="Enter your pet's name"
               />
             </div>
@@ -190,7 +193,7 @@ const Contact = () => {
             <div>
               <label
                 htmlFor="contact_firstname"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-dark-text mb-2"
               >
                 First Name <span className="text-red-500">*</span>
               </label>
@@ -201,7 +204,7 @@ const Contact = () => {
                 name="firstname"
                 value={contact?.firstname || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                className="w-full px-4 py-3 border border-pastel-lavender/40 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-pastel-coral dark:focus:ring-pastel-rose focus:border-transparent transition duration-200 ease-in-out hover:border-pastel-coral dark:hover:border-pastel-rose bg-white dark:bg-dark-surfaceLight text-gray-800 dark:text-dark-text"
                 placeholder="Enter your first name"
               />
             </div>
@@ -210,7 +213,7 @@ const Contact = () => {
             <div>
               <label
                 htmlFor="contact_lastname"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-dark-text mb-2"
               >
                 Last Name
               </label>
@@ -220,7 +223,7 @@ const Contact = () => {
                 name="lastname"
                 value={contact?.lastname || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                className="w-full px-4 py-3 border border-pastel-lavender/40 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-pastel-coral dark:focus:ring-pastel-rose focus:border-transparent transition duration-200 ease-in-out hover:border-pastel-coral dark:hover:border-pastel-rose bg-white dark:bg-dark-surfaceLight text-gray-800 dark:text-dark-text"
                 placeholder="Enter your last name"
               />
             </div>
@@ -229,7 +232,7 @@ const Contact = () => {
             <div>
               <label
                 htmlFor="contact_address"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-dark-text mb-2"
               >
                 Address
               </label>
@@ -239,7 +242,7 @@ const Contact = () => {
                 name="address"
                 value={contact?.address || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                className="w-full px-4 py-3 border border-pastel-lavender/40 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-pastel-coral dark:focus:ring-pastel-rose focus:border-transparent transition duration-200 ease-in-out hover:border-pastel-coral dark:hover:border-pastel-rose bg-white dark:bg-dark-surfaceLight text-gray-800 dark:text-dark-text"
                 placeholder="Enter your address"
               />
             </div>
@@ -248,7 +251,7 @@ const Contact = () => {
             <div>
               <label
                 htmlFor="contact_phone"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-semibold text-gray-700 dark:text-dark-text mb-2"
               >
                 Phone <span className="text-red-500">*</span>
               </label>
@@ -259,7 +262,7 @@ const Contact = () => {
                 required={true}
                 value={contact?.phone || ""}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition duration-200 ease-in-out hover:border-gray-400"
+                className="w-full px-4 py-3 border border-pastel-lavender/40 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-pastel-coral dark:focus:ring-pastel-rose focus:border-transparent transition duration-200 ease-in-out hover:border-pastel-coral dark:hover:border-pastel-rose bg-white dark:bg-dark-surfaceLight text-gray-800 dark:text-dark-text"
                 placeholder="Enter your phone number"
               />
             </div>
@@ -270,7 +273,7 @@ const Contact = () => {
                 id="submit-contact"
                 name="submit"
                 type="submit"
-                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform transition duration-200 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full bg-gradient-to-r from-pastel-coral to-pastel-rose dark:from-pastel-mauve dark:to-pastel-lilac text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pastel-coral dark:focus:ring-pastel-rose transform transition duration-200 ease-in-out hover:scale-[1.02] active:scale-[0.98]"
               >
                 {contact !== null ? "Update Contact" : "Create Contact"}
               </button>

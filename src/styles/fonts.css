@@ -1,0 +1,167 @@
+/* C:\Projects\LaserTags\src\styles\fonts.css */
+/* Import Google Fonts for LaserTags */
+
+/* Pacifico - Elegant Script (Feminine) */
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+/* Cookie - Casual Handwritten (Feminine) */
+@import url('https://fonts.googleapis.com/css2?family=Cookie&display=swap');
+
+/* Acme - Modern Sans-Serif */
+@import url('https://fonts.googleapis.com/css2?family=Acme&display=swap');
+
+/* Aldrich - Bold Sans-Serif */
+@import url('https://fonts.googleapis.com/css2?family=Aldrich&display=swap');
+
+/* Abril Fatface - Bold Display */
+@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap');
+
+/* Font Preview Classes */
+.font-preview-container {
+  font-size: 32px;
+  line-height: 1.4;
+  padding: 20px;
+  text-align: center;
+  background: white;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+/* Individual Font Classes */
+.font-times-new-roman {
+  font-family: 'Times New Roman', serif;
+}
+
+.font-acme {
+  font-family: 'Acme', sans-serif;
+}
+
+.font-pacifico {
+  font-family: 'Pacifico', cursive;
+}
+
+.font-cookie {
+  font-family: 'Cookie', cursive;
+}
+
+.font-aldrich {
+  font-family: 'Aldrich', sans-serif;
+}
+
+.font-abril-fatface {
+  font-family: 'Abril Fatface', display;
+}
+
+/* Font Selection Grid */
+.font-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.font-option {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.font-option:hover {
+  border-color: #FF6B9D;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 157, 0.15);
+}
+
+.font-option.selected {
+  border-color: #FF6B9D;
+  background: #FFF5F8;
+  box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+}
+
+.font-option.feminine {
+  position: relative;
+}
+
+.font-option.feminine::after {
+  content: '✨';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+}
+
+.font-preview {
+  font-size: 28px;
+  margin: 10px 0;
+  color: #333;
+}
+
+.font-name {
+  font-weight: 600;
+  color: #333;
+  margin: 5px 0;
+  font-size: 14px;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.font-style {
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.font-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.font-badge.feminine {
+  background: #FFE5F0;
+  color: #D946A6;
+}
+
+.font-badge.popular {
+  background: #FFF9E5;
+  color: #F59E0B;
+}
+
+/* Preview Text Sizes */
+.preview-large {
+  font-size: 32px;
+  line-height: 1.4;
+}
+
+.preview-medium {
+  font-size: 24px;
+  line-height: 1.4;
+}
+
+.preview-small {
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .font-selector-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  
+  .font-preview {
+    font-size: 24px;
+  }
+  
+  .preview-large {
+    font-size: 28px;
+  }
+}

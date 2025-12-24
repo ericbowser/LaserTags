@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaserTags QR Code Generator - Test Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: monospace;
+            line-height: 1.6;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: #f5f5f5;
+            padding: 5px;
+            border-radius: 10px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 10px 5px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .mode-btn:not(.active):hover {
+            background: #e0e0e0;
+        }
+        
+        .input-mode {
+            display: none;
+        }
+        
+        .input-mode.active {
+            display: block;
+        }
+        
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .preset-btn {
+            padding: 10px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+        
+        .preset-btn:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+        }
+        
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .tag-preview {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            min-height: 200px;
+        }
+        
+        .tag-line {
+            font-size: 1.4em;
+            margin: 8px 0;
+            letter-spacing: 1px;
+            word-wrap: break-word;
+        }
+        
+        .tag-line:first-child {
+            font-size: 2em;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        
+        .tag-preview small {
+            display: block;
+            margin-top: 15px;
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+        
+        .info-box.demo {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        
+        .info-box.demo h4 {
+            color: #f57c00;
+        }
+        
+        .url-display {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .download-btn {
+            margin-top: 15px;
+            background: #4caf50;
+        }
+        
+        .download-btn:hover {
+            background: #45a049;
+        }
+        
+        .char-count {
+            text-align: right;
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .char-count.warning {
+            color: #ff9800;
+        }
+        
+        .char-count.error {
+            color: #f44336;
+        }
+        
+        .loading-msg {
+            color: #999;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mode-btn {
+                font-size: 11px;
+                padding: 8px 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏷️ LaserTags QR Code Generator</h1>
+        
+        <div class="grid">
+            <!-- Input Form -->
+            <div class="card">
+                <h2>Tag Information</h2>
+                
+                <!-- Mode Toggle -->
+                <div class="mode-toggle">
+                    <button class="mode-btn active" onclick="switchMode('simple')">📝 Simple</button>
+                    <button class="mode-btn" onclick="switchMode('advanced')">✍️ Custom</button>
+                    <button class="mode-btn" onclick="switchMode('demo')">🎨 Demo</button>
+                </div>
+                
+                <!-- Simple Mode -->
+                <div id="simpleMode" class="input-mode active">
+                    <div class="form-group">
+                        <label for="contactId">Contact ID (from database):</label>
+                        <input type="number" id="contactId" placeholder="e.g., 1" value="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="petName">Line 1 - Pet Name:</label>
+                        <input type="text" id="petName" placeholder="e.g., BUDDY" value="BUDDY">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Line 2 - Phone Number:</label>
+                        <input type="tel" id="phone" placeholder="e.g., 555-0100" value="555-0100">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="line3">Line 3 - Message:</label>
+                        <input type="text" id="line3" placeholder="e.g., IF FOUND PLEASE CALL" value="IF FOUND PLEASE CALL">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="line4">Line 4 (optional):</label>
+                        <input type="text" id="line4" placeholder="Additional line">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="line5">Line 5 (optional):</label>
+                        <input type="text" id="line5" placeholder="Additional line">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="baseUrl">QR Code Links To:</label>
+                        <select id="baseUrl">
+                            <option value="http://localhost:5173">Local Frontend (localhost:5173)</option>
+                            <option value="http://localhost:3003">Local Backend (localhost:3003)</option>
+                            <option value="https://lasertags.com">Production (lasertags.com)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Advanced Mode -->
+                <div id="advancedMode" class="input-mode">
+                    <div class="form-group">
+                        <label for="contactIdAdv">Contact ID (from database):</label>
+                        <input type="number" id="contactIdAdv" placeholder="e.g., 1" value="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customText">Tag Text (one line per row):</label>
+                        <textarea id="customText" placeholder="BUDDY&#10;555-0100&#10;IF FOUND PLEASE CALL&#10;REWARD OFFERED&#10;Thank you!">BUDDY
+555-0100
+IF FOUND PLEASE CALL</textarea>
+                        <div class="char-count" id="charCount">3 lines</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="baseUrlAdv">QR Code Links To:</label>
+                        <select id="baseUrlAdv">
+                            <option value="http://localhost:5173">Local Frontend (localhost:5173)</option>
+                            <option value="http://localhost:3003">Local Backend (localhost:3003)</option>
+                            <option value="https://lasertags.com">Production (lasertags.com)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="info-box">
+                        <h4>💡 Tips:</h4>
+                        <p>• Each line will appear on the tag<br>
+                        • Keep lines short for readability<br>
+                        • First line is typically pet name<br>
+                        • Press Enter for new lines<br>
+                        • QR code links to contact page</p>
+                    </div>
+                </div>
+                
+                <!-- Demo Mode -->
+                <div id="demoMode" class="input-mode">
+                    <div class="form-group">
+                        <label>Quick Presets:</label>
+                        <div class="preset-buttons">
+                            <button class="preset-btn" onclick="loadPreset('buddy')">🐕 Buddy</button>
+                            <button class="preset-btn" onclick="loadPreset('website')">🌐 Website</button>
+                            <button class="preset-btn" onclick="loadPreset('phone')">📞 Phone</button>
+                            <button class="preset-btn" onclick="loadPreset('custom')">✨ Custom</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="demoText">Tag Display Text (what shows on tag):</label>
+                        <textarea id="demoText" placeholder="BUDDY&#10;555-DEMO&#10;IF FOUND PLEASE CALL">BUDDY
+555-DEMO
+IF FOUND PLEASE CALL
+Demo Tag Only</textarea>
+                        <div class="char-count" id="demoCharCount">4 lines</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="qrPlainText">QR Code Contains (plain text, phone, URL, anything):</label>
+                        <input type="text" id="qrPlainText" placeholder="e.g., 555-DEMO or https://lasertags.com" value="LaserTags Demo - Not a real tag">
+                    </div>
+                    
+                    <div class="info-box demo">
+                        <h4>🎨 Demo Mode:</h4>
+                        <p>• Tag text and QR code are independent<br>
+                        • QR encodes plain text (no URLs/IDs needed)<br>
+                        • Perfect for photos and display models<br>
+                        • Use for trade shows, mockups, prototypes<br>
+                        • QR can contain phone numbers, text, or URLs</p>
+                    </div>
+                </div>
+                
+                <button id="generateBtn" onclick="generateQR()">Generate QR Code</button>
+                
+                <div class="info-box">
+                    <h4>How to Use:</h4>
+                    <p><strong>Simple/Custom:</strong> Real customer tags with database URLs<br>
+                    <strong>Demo:</strong> Display models with plain text QR codes</p>
+                </div>
+            </div>
+            
+            <!-- QR Code Display -->
+            <div class="card">
+                <h2>Generated QR Code</h2>
+                
+                <div id="qrcode">
+                    <p class="loading-msg">Loading QR library...</p>
+                </div>
+                
+                <div id="qrUrl" class="url-display" style="display: none;"></div>
+                
+                <button class="download-btn" id="downloadBtn" style="display: none;" onclick="downloadQR()">
+                    📥 Download QR Code
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tag Preview -->
+        <div class="card">
+            <h2>Tag Preview</h2>
+            <div class="tag-preview">
+                <div id="previewLines">
+                    <div class="tag-line">BUDDY</div>
+                    <div class="tag-line">555-0100</div>
+                    <div class="tag-line">IF FOUND PLEASE CALL</div>
+                </div>
+                <small>Scan QR code below ↓</small>
+                <div style="margin-top: 20px; background: white; padding: 10px; display: inline-block; border-radius: 10px;">
+                    <div id="previewQR" style="width: 150px; height: 150px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load QRCode library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script>
+        let currentQR = null;
+        let currentMode = 'simple';
+        let qrLibLoaded = false;
+        
+        // Demo presets
+        const presets = {
+            buddy: {
+                text: "BUDDY\n555-DEMO\nIF FOUND PLEASE CALL\nDemo Tag Only",
+                qrData: "LaserTags Demo - Not a real tag"
+            },
+            website: {
+                text: "LASER TAGS\nScan for Info\nwww.lasertags.com",
+                qrData: "https://lasertags.com"
+            },
+            phone: {
+                text: "BUDDY\nCall Owner\n555-DEMO",
+                qrData: "555-DEMO"
+            },
+            custom: {
+                text: "MY PET\nCustom Text Here\nEdit Me!",
+                qrData: "Put anything you want in the QR code"
+            }
+        };
+        
+        function loadPreset(presetName) {
+            const preset = presets[presetName];
+            if (preset) {
+                document.getElementById('demoText').value = preset.text;
+                document.getElementById('qrPlainText').value = preset.qrData;
+                updatePreview();
+                updateDemoCharCount();
+            }
+        }
+        
+        // Wait for QR library to load
+        function waitForQRCode() {
+            return new Promise((resolve, reject) => {
+                if (typeof QRCode !== 'undefined') {
+                    qrLibLoaded = true;
+                    resolve();
+                } else {
+                    let attempts = 0;
+                    const checkInterval = setInterval(() => {
+                        attempts++;
+                        if (typeof QRCode !== 'undefined') {
+                            clearInterval(checkInterval);
+                            qrLibLoaded = true;
+                            resolve();
+                        } else if (attempts > 50) {
+                            clearInterval(checkInterval);
+                            reject(new Error('QR Code library failed to load'));
+                        }
+                    }, 100);
+                }
+            });
+        }
+        
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Update mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update mode panels
+            document.getElementById('simpleMode').classList.remove('active');
+            document.getElementById('advancedMode').classList.remove('active');
+            document.getElementById('demoMode').classList.remove('active');
+            
+            if (mode === 'simple') {
+                document.getElementById('simpleMode').classList.add('active');
+            } else if (mode === 'advanced') {
+                document.getElementById('advancedMode').classList.add('active');
+                updateCharCount();
+            } else if (mode === 'demo') {
+                document.getElementById('demoMode').classList.add('active');
+                updateDemoCharCount();
+            }
+            
+            // Regenerate preview
+            updatePreview();
+        }
+        
+        function getTagLines() {
+            let lines = [];
+            
+            if (currentMode === 'simple') {
+                const petName = document.getElementById('petName').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const line3 = document.getElementById('line3').value.trim();
+                const line4 = document.getElementById('line4').value.trim();
+                const line5 = document.getElementById('line5').value.trim();
+                
+                if (petName) lines.push(petName);
+                if (phone) lines.push(phone);
+                if (line3) lines.push(line3);
+                if (line4) lines.push(line4);
+                if (line5) lines.push(line5);
+            } else if (currentMode === 'advanced') {
+                const customText = document.getElementById('customText').value;
+                lines = customText.split('\n');
+            } else if (currentMode === 'demo') {
+                const demoText = document.getElementById('demoText').value;
+                lines = demoText.split('\n');
+            }
+            
+            return lines;
+        }
+        
+        function getQRData() {
+            if (currentMode === 'demo') {
+                // Demo mode: plain text, no URLs
+                return document.getElementById('qrPlainText').value;
+            } else {
+                // Simple/Advanced mode: generate contact URL
+                let contactId, baseUrl;
+                
+                if (currentMode === 'simple') {
+                    contactId = document.getElementById('contactId').value;
+                    baseUrl = document.getElementById('baseUrl').value;
+                } else {
+                    contactId = document.getElementById('contactIdAdv').value;
+                    baseUrl = document.getElementById('baseUrlAdv').value;
+                }
+                
+                return `${baseUrl}/contact/${contactId}`;
+            }
+        }
+        
+        function updatePreview() {
+            const lines = getTagLines();
+            const previewLines = document.getElementById('previewLines');
+            
+            previewLines.innerHTML = '';
+            
+            if (lines.length === 0 || (lines.length === 1 && lines[0] === '')) {
+                previewLines.innerHTML = '<div class="tag-line">No text entered</div>';
+            } else {
+                lines.forEach(line => {
+                    const lineDiv = document.createElement('div');
+                    lineDiv.className = 'tag-line';
+                    lineDiv.textContent = line || ' ';
+                    previewLines.appendChild(lineDiv);
+                });
+            }
+        }
+        
+        function updateCharCount() {
+            const textarea = document.getElementById('customText');
+            const charCountDiv = document.getElementById('charCount');
+            const lines = textarea.value.split('\n');
+            const lineCount = lines.length;
+            const charCount = textarea.value.length;
+            
+            charCountDiv.textContent = `${lineCount} line${lineCount !== 1 ? 's' : ''}, ${charCount} characters`;
+            
+            if (lineCount > 10) {
+                charCountDiv.classList.add('warning');
+                charCountDiv.classList.remove('error');
+            } else if (lineCount > 15) {
+                charCountDiv.classList.add('error');
+                charCountDiv.classList.remove('warning');
+            } else {
+                charCountDiv.classList.remove('warning', 'error');
+            }
+        }
+        
+        function updateDemoCharCount() {
+            const textarea = document.getElementById('demoText');
+            const charCountDiv = document.getElementById('demoCharCount');
+            const lines = textarea.value.split('\n');
+            const lineCount = lines.length;
+            const charCount = textarea.value.length;
+            
+            charCountDiv.textContent = `${lineCount} line${lineCount !== 1 ? 's' : ''}, ${charCount} characters`;
+            
+            if (lineCount > 10) {
+                charCountDiv.classList.add('warning');
+                charCountDiv.classList.remove('error');
+            } else if (lineCount > 15) {
+                charCountDiv.classList.add('error');
+                charCountDiv.classList.remove('warning');
+            } else {
+                charCountDiv.classList.remove('warning', 'error');
+            }
+        }
+        
+        async function generateQR() {
+            if (!qrLibLoaded) {
+                alert('QR Code library is still loading. Please wait a moment and try again.');
+                return;
+            }
+            
+            const qrData = getQRData();
+            const lines = getTagLines();
+            
+            updatePreview();
+            
+            if (currentMode === 'demo') {
+                document.getElementById('qrUrl').textContent = `QR Code contains: ${qrData}`;
+            } else {
+                document.getElementById('qrUrl').textContent = `QR Code links to: ${qrData}`;
+            }
+            document.getElementById('qrUrl').style.display = 'block';
+            
+            document.getElementById('qrcode').innerHTML = '';
+            document.getElementById('previewQR').innerHTML = '';
+            
+            try {
+                new QRCode(document.getElementById('qrcode'), {
+                    text: qrData,
+                    width: 300,
+                    height: 300,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                new QRCode(document.getElementById('previewQR'), {
+                    text: qrData,
+                    width: 150,
+                    height: 150,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                setTimeout(() => {
+                    const canvas = document.querySelector('#qrcode canvas');
+                    if (canvas) {
+                        currentQR = canvas;
+                        document.getElementById('downloadBtn').style.display = 'block';
+                    }
+                }, 100);
+                
+            } catch (error) {
+                console.error('QR generation error:', error);
+                alert('Error generating QR code: ' + error.message);
+            }
+        }
+        
+        function downloadQR() {
+            if (!currentQR) {
+                alert('Please generate a QR code first!');
+                return;
+            }
+            
+            const lines = getTagLines();
+            const firstName = lines[0] || 'tag';
+            const timestamp = new Date().getTime();
+            
+            currentQR.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `lasertag-qr-${firstName.replace(/\s+/g, '-')}-${timestamp}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+        
+        // Initialize
+        window.addEventListener('load', async function() {
+            try {
+                document.getElementById('qrcode').innerHTML = '<p class="loading-msg">Loading QR library...</p>';
+                await waitForQRCode();
+                document.getElementById('qrcode').innerHTML = '<p style="color: #999;">QR code will appear here</p>';
+                document.getElementById('generateBtn').disabled = false;
+                generateQR();
+            } catch (error) {
+                console.error('Failed to load QR library:', error);
+                document.getElementById('qrcode').innerHTML = '<p style="color: #f44336;">❌ Failed to load QR library. Please refresh the page.</p>';
+                alert('Failed to load QR Code library. Please check your internet connection and refresh the page.');
+            }
+        });
+        
+        // Event listeners - Simple mode
+        document.getElementById('petName').addEventListener('input', updatePreview);
+        document.getElementById('phone').addEventListener('input', updatePreview);
+        document.getElementById('line3').addEventListener('input', updatePreview);
+        document.getElementById('line4').addEventListener('input', updatePreview);
+        document.getElementById('line5').addEventListener('input', updatePreview);
+        
+        // Event listeners - Advanced mode
+        document.getElementById('customText').addEventListener('input', function() {
+            updatePreview();
+            updateCharCount();
+        });
+        
+        // Event listeners - Demo mode
+        document.getElementById('demoText').addEventListener('input', function() {
+            updatePreview();
+            updateDemoCharCount();
+        });
+        
+        // Sync contact IDs and base URLs
+        document.getElementById('contactId').addEventListener('input', function() {
+            document.getElementById('contactIdAdv').value = this.value;
+        });
+        document.getElementById('contactIdAdv').addEventListener('input', function() {
+            document.getElementById('contactId').value = this.value;
+        });
+        
+        document.getElementById('baseUrl').addEventListener('change', function() {
+            document.getElementById('baseUrlAdv').value = this.value;
+        });
+        document.getElementById('baseUrlAdv').addEventListener('change', function() {
+            document.getElementById('baseUrl').value = this.value;
+        });
+    </script>
+</body>
+</html>

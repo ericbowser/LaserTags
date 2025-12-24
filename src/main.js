@@ -7,6 +7,7 @@ import StripePayment from "./components/StripePayment";
 import SvgBackground from "./components/SvgBackground";
 import Profile from "./components/Profile";
 import { Auth0Provider } from "@auth0/auth0-react";
+import { ThemeProvider } from "./components/ThemeProvider";
 import "./styles/input.css";
 import "./styles/output.css";
 import { VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID } from "../env.json";
@@ -18,8 +19,6 @@ import OrderSuccess from "./components/OrderSuccess";
 // Get environment variables - making sure they're accessible
 const domain = VITE_AUTH0_DOMAIN;
 const clientId = VITE_AUTH0_CLIENT_ID;
-console.log(domain);
-console.log(clientId);
 
 const url = window.URL || window.webkitURL;
 console.log("URL: ", url);
@@ -88,13 +87,15 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById("root")).render(
-  <Auth0Provider
-    domain={domain}
-    clientId={clientId}
-    authorizationParams={{
-      redirect_uri: window.location.origin,
-    }}
-  >
-    <RouterProvider router={router} />
-  </Auth0Provider>
+  <ThemeProvider>
+    <Auth0Provider
+      domain={domain}
+      clientId={clientId}
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+      }}
+    >
+      <RouterProvider router={router} />
+    </Auth0Provider>
+  </ThemeProvider>
 );

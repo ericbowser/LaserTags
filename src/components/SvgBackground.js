@@ -1,6 +1,5 @@
 import React, {useEffect, useRef} from 'react';
 import {SVG} from '@svgdotjs/svg.js';
-import back from '../assets/circle-scatter-haikei.svg';
 
 function SvgBackground({children}) {
   const svgRef = useRef(null);
