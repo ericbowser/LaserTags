@@ -112,7 +112,7 @@ const siliconeShapes = {
   },
 };
 
-const PRICE = 16.99; // Consistent price for all silicone tags
+const PRICE = 11.99; // Consistent price for all silicone tags
 
 
 function MaterialSelection() {
