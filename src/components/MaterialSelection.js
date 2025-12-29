@@ -356,6 +356,27 @@ function MaterialSelection() {
   };
 
   const generateUserId = () => {
+    // Prefer cryptographically secure randomness for user IDs
+    const cryptoObj =
+      (typeof window !== "undefined" && window.crypto) ||
+      (typeof self !== "undefined" && self.crypto) ||
+      null;
+
+    if (cryptoObj && typeof cryptoObj.randomUUID === "function") {
+      return `user_${cryptoObj.randomUUID()}`;
+    }
+
+    if (cryptoObj && typeof cryptoObj.getRandomValues === "function") {
+      const array = new Uint32Array(3);
+      cryptoObj.getRandomValues(array);
+      const randomPart = Array.from(array)
+        .map((n) => n.toString(36))
+        .join("")
+        .substr(0, 16);
+      return `user_${Date.now()}_${randomPart}`;
+    }
+
+    // Fallback for environments without Web Crypto API
     return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
