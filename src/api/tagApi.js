@@ -2,20 +2,29 @@
 import {LASER_BACKEND_BASE_URL} from '../../env.json';
 
 async function saveContact(body = {}) {
-  console.log('saveContact - body being sent to backend:', JSON.stringify(body, null, 2));
+  // Ensure all address fields are included (default to empty string if not provided)
+  const requestBody = {
+    ...body, // Include all fields from body first
+    // Explicitly ensure address fields are always present
+    address_line_1: body.address_line_1 || '',
+    address_line_2: body.address_line_2 || '',
+    address_line_3: body.address_line_3 || ''
+  };
+  
+  console.log('saveContact - body being sent to backend:', JSON.stringify(requestBody, null, 2));
   console.log('saveContact - field breakdown (contact table fields):', {
-    firstname: body.firstname,
-    lastname: body.lastname,
-    fullname: body.fullname,
-    petname: body.petname,
-    phone: body.phone,
-    address_line_1: body.address_line_1,
-    address_line_2: body.address_line_2,
-    address_line_3: body.address_line_3,
+    firstname: requestBody.firstname,
+    lastname: requestBody.lastname,
+    fullname: requestBody.fullname,
+    petname: requestBody.petname,
+    phone: requestBody.phone,
+    address_line_1: requestBody.address_line_1,
+    address_line_2: requestBody.address_line_2,
+    address_line_3: requestBody.address_line_3
   });
   
   try {
-    const response = await axios.post(`${LASER_BACKEND_BASE_URL}/saveContact`, body, {
+    const response = await axios.post(`${LASER_BACKEND_BASE_URL}/saveContact`, requestBody, {
       headers: {
         'Content-Type': 'application/json',
       }
@@ -196,4 +205,54 @@ async function sendEmail(body = {}) {
   }
 }
 
-export {saveContact, getContact, loginBackendLaser, updateContact, saveQrCode, updateOrderPayment, createOrder, sendEmail};
+async function saveTag(body = {}) {
+  // Ensure all required fields are included with proper types
+  const requestBody = {
+    orderid: body.orderid ? Number(body.orderid) : null,
+    tagside: Array.isArray(body.tagside) ? body.tagside : [],
+    text_line_1: Array.isArray(body.text_line_1) ? body.text_line_1 : [],
+    text_line_2: body.text_line_2 || '',
+    text_line_3: body.text_line_3 || '',
+    text_line_4: Array.isArray(body.text_line_4) ? body.text_line_4 : [],
+    text_line_5: body.text_line_5 || '',
+    text_line_6: body.text_line_6 || '',
+    notes: body.notes || ''
+  };
+  
+  console.log('saveTag - body being sent to backend:', JSON.stringify(requestBody, null, 2));
+  console.log('saveTag - field breakdown (tag table fields):', {
+    orderid: requestBody.orderid,
+    tagside: requestBody.tagside,
+    text_line_1: requestBody.text_line_1,
+    text_line_2: requestBody.text_line_2,
+    text_line_3: requestBody.text_line_3,
+    text_line_4: requestBody.text_line_4,
+    text_line_5: requestBody.text_line_5,
+    text_line_6: requestBody.text_line_6,
+    notes: requestBody.notes
+  });
+  
+  try {
+    const response = await axios.post(`${LASER_BACKEND_BASE_URL}/saveTag`, requestBody, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    if (response.status === 201 || response.status === 200) {
+      console.log('saveTag - response data: ', response.data);
+      return response.data;
+    } else {
+      console.error('saveTag - failed to save tag', response);
+      return response;
+    }
+  } catch (error) {
+    console.error('saveTag - error:', error);
+    if (error.response) {
+      console.error('saveTag - error response data:', error.response.data);
+      console.error('saveTag - error response status:', error.response.status);
+    }
+    return null;
+  }
+}
+
+export {saveContact, getContact, loginBackendLaser, updateContact, saveQrCode, updateOrderPayment, createOrder, sendEmail, saveTag};

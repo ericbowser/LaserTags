@@ -3,7 +3,7 @@ const Materials = [
   "Silicone",
   "Aluminum",
   "Wood",
-  "Stainless Steel",
+  "terStainless Steel",
   "Leather",
   "Brass"
 ];

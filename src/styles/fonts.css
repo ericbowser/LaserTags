@@ -16,6 +16,12 @@
 /* Abril Fatface - Bold Display */
 @import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap');
 
+/* Burtons - Playful Display */
+@import url('https://fonts.googleapis.com/css2?family=Burtons&display=swap');
+
+/* Atomic Age - Retro Display */
+@import url('https://fonts.googleapis.com/css2?family=Atomic+Age&display=swap');
+
 /* Font Preview Classes */
 .font-preview-container {
   font-size: 32px;
@@ -25,6 +31,11 @@
   background: white;
   border-radius: 8px;
   margin: 10px 0;
+}
+
+.dark .font-preview-container {
+  background: #1A1F2E;
+  color: #F7FAFC;
 }
 
 /* Individual Font Classes */
@@ -52,6 +63,14 @@
   font-family: 'Abril Fatface', display;
 }
 
+.font-burtons {
+  font-family: 'Burtons', display;
+}
+
+.font-atomic-age {
+  font-family: 'Atomic Age', display;
+}
+
 /* Font Selection Grid */
 .font-selector-grid {
   display: grid;
@@ -69,16 +88,33 @@
   background: white;
 }
 
+.dark .font-option {
+  border-color: #2D3748;
+  background: #1A1F2E;
+}
+
 .font-option:hover {
   border-color: #FF6B9D;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 107, 157, 0.15);
 }
 
+.dark .font-option:hover {
+  border-color: #FF8787;
+  box-shadow: 0 4px 12px rgba(255, 135, 135, 0.3);
+  background: #232936;
+}
+
 .font-option.selected {
   border-color: #FF6B9D;
   background: #FFF5F8;
   box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+}
+
+.dark .font-option.selected {
+  border-color: #FF8787;
+  background: #2A3142;
+  box-shadow: 0 0 0 3px rgba(255, 135, 135, 0.2);
 }
 
 .font-option.feminine {
@@ -99,6 +135,10 @@
   color: #333;
 }
 
+.dark .font-preview {
+  color: #F7FAFC;
+}
+
 .font-name {
   font-weight: 600;
   color: #333;
@@ -107,11 +147,19 @@
   font-family: system-ui, -apple-system, sans-serif;
 }
 
+.dark .font-name {
+  color: #F7FAFC;
+}
+
 .font-style {
   font-size: 12px;
   color: #666;
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
+}
+
+.dark .font-style {
+  color: #A0AEC0;
 }
 
 .font-badge {
@@ -129,9 +177,19 @@
   color: #D946A6;
 }
 
+.dark .font-badge.feminine {
+  background: #4A1F3D;
+  color: #FFB3D9;
+}
+
 .font-badge.popular {
   background: #FFF9E5;
   color: #F59E0B;
+}
+
+.dark .font-badge.popular {
+  background: #4A3D1F;
+  color: #FFE66D;
 }
 
 /* Preview Text Sizes */
@@ -148,6 +206,67 @@
 .preview-small {
   font-size: 18px;
   line-height: 1.4;
+}
+
+/* Font Selector Container */
+.font-selector-container {
+  margin: 20px 0;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1A1A1A;
+}
+
+.dark .section-title {
+  color: #F7FAFC;
+}
+
+.section-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.dark .section-description {
+  color: #A0AEC0;
+}
+
+.selected-font-preview {
+  margin-top: 24px;
+  padding: 20px;
+  background: #F8F9FA;
+  border-radius: 12px;
+  border: 2px solid #E2E8F0;
+}
+
+.dark .selected-font-preview {
+  background: #1A1F2E;
+  border-color: #2D3748;
+}
+
+.selected-font-preview h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.dark .selected-font-preview h4 {
+  color: #F7FAFC;
+}
+
+.large-preview {
+  font-size: 32px;
+  line-height: 1.6;
+  color: #1A1A1A;
+  text-align: center;
+}
+
+.dark .large-preview {
+  color: #F7FAFC;
 }
 
 /* Responsive */

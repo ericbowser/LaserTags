@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronLeft, ArrowRight, Database, FileText, CheckCircle } from "lucide-react";
+import { ChevronLeft, ArrowRight, Database, FileText, CheckCircle, RotateCcw } from "lucide-react";
 import axios from "axios";
 import { LASER_BACKEND_BASE_URL } from "../../env.json";
 import StripeCheckout from "./StripeCheckout";
 import TagPreview from "./TagPreview";
+import FontDropdown from "./FontDropdown";
 import { generateQrCodeSVG, generateQrCodeUrl } from "../utils/qrCodeUtils";
 import { formatPhoneNumber, validatePhoneNumber, getUnformattedPhone } from "../utils/phoneUtils";
-import { saveContact, saveQrCode, createOrder } from "../api/tagApi";
+import { saveContact, saveQrCode, createOrder, saveTag } from "../api/tagApi";
 import DarkModeToggle from "./DarkModeToggle";
+import { DEFAULT_FONT, AVAILABLE_FONTS } from "../config/fonts";
+import "../styles/fonts.css";
 
 // Import all silicone tag images
 // Bone shapes
@@ -163,15 +166,20 @@ function MaterialSelection() {
   const [qrCodePosition, setQrCodePosition] = useState({ x: 50, y: 50 });
   const [phoneErrors, setPhoneErrors] = useState({ qr: null, engrave: null });
 
+  const [selectedFont, setSelectedFont] = useState(DEFAULT_FONT.id);
+  const [textCase, setTextCase] = useState('title'); // 'title' or 'uppercase'
+  const [designingSide, setDesigningSide] = useState(1); // Which side is currently being designed (1 or 2)
   const [side1Config, setSide1Config] = useState({
-    petName: '',
-    fontType: 'bold'
-  });
-  const [side2Config, setSide2Config] = useState({
-    addressText: '',
     line1: '',
     line2: '',
-    line3: ''
+    line3: '',
+    fontId: DEFAULT_FONT.id
+  });
+  const [side2Config, setSide2Config] = useState({
+    line1: '',
+    line2: '',
+    line3: '',
+    fontId: DEFAULT_FONT.id
   });
   const [qrCodeSide, setQrCodeSide] = useState(2);
 
@@ -195,9 +203,18 @@ function MaterialSelection() {
       const shapeData = siliconeShapes[urlShape];
       const material = shapeData?.colors.find((c) => c.id === urlMaterialId);
       if (material && material.id !== selectedMaterial?.id) {
+        // Map shape keys to shape IDs for TagPreview
+        const shapeMap = {
+          'bone': 'bone',
+          'rectangle': 'rect',
+          'circle': 'circ',
+          'triangle': 'tri',
+          'hexagon': 'hex'
+        };
         setSelectedMaterial({
           ...material,
           shapeName: shapeData.name,
+          shape: shapeMap[urlShape] || urlShape,
           price: PRICE,
         });
       }
@@ -243,9 +260,18 @@ function MaterialSelection() {
 
   const handleColorSelect = (shapeKey, colorOption) => {
     const shapeData = siliconeShapes[shapeKey];
+    // Map shape keys to shape IDs for TagPreview
+    const shapeMap = {
+      'bone': 'bone',
+      'rectangle': 'rect',
+      'circle': 'circ',
+      'triangle': 'tri',
+      'hexagon': 'hex'
+    };
     const material = {
       ...colorOption,
       shapeName: shapeData.name,
+      shape: shapeMap[shapeKey] || shapeKey,
       price: PRICE,
     };
     setSelectedMaterial(material);
@@ -266,6 +292,27 @@ function MaterialSelection() {
     setStep(4);
   };
 
+  // Unified handler for tag text input (both sides)
+  const handleTagTextChange = (side, line, value) => {
+    if (side === 1) {
+      setSide1Config((prev) => ({ ...prev, [line]: value }));
+    } else {
+      setSide2Config((prev) => ({ ...prev, [line]: value }));
+    }
+  };
+
+  // Handle font change - applies to both sides
+  const handleFontChange = (fontId) => {
+    setSelectedFont(fontId);
+    setSide1Config((prev) => ({ ...prev, fontId: fontId }));
+    setSide2Config((prev) => ({ ...prev, fontId: fontId }));
+  };
+
+  // Flip to design the other side
+  const handleFlipDesignSide = () => {
+    setDesigningSide(designingSide === 1 ? 2 : 1);
+  };
+
   const handleQrFormChange = (e) => {
     const { name, value } = e.target;
 
@@ -276,17 +323,6 @@ function MaterialSelection() {
       setPhoneErrors((prev) => ({ ...prev, qr: validation.isValid ? null : validation.error }));
     } else {
       setQrForm((prev) => ({ ...prev, [name]: value }));
-
-      if (name === 'petname') {
-        setSide1Config((prev) => ({ ...prev, petName: value }));
-      }
-
-      if (name === 'address_line_1' || name === 'address_line_2') {
-        const newAddress = name === 'address_line_1'
-          ? [value, qrForm.address_line_2].filter(Boolean).join(', ')
-          : [qrForm.address_line_1, value].filter(Boolean).join(', ');
-        setSide2Config((prev) => ({ ...prev, addressText: newAddress }));
-      }
     }
   };
 
@@ -300,23 +336,41 @@ function MaterialSelection() {
       setPhoneErrors((prev) => ({ ...prev, engrave: validation.isValid ? null : validation.error }));
     } else {
       setEngraveForm((prev) => ({ ...prev, [name]: value }));
-
-      if (name === 'petname') {
-        setSide1Config((prev) => ({ ...prev, petName: value }));
-      }
-
-      if (name === 'line1' || name === 'line2' || name === 'line3') {
-        setSide2Config((prev) => ({ ...prev, [name]: value }));
-      }
     }
+  };
+
+  // Unified submit handler for tag design
+  const handleSubmitTagDesign = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validate that at least one line is filled on each side
+    const side1HasText = side1Config.line1 || side1Config.line2 || side1Config.line3;
+    const side2HasText = side2Config.line1 || side2Config.line2 || side2Config.line3;
+
+    if (!side1HasText) {
+      setError("Please enter at least one line of text for Side 1");
+      return;
+    }
+
+    if (!side2HasText) {
+      setError("Please enter at least one line of text for Side 2");
+      return;
+    }
+
+    // Move to review step
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("step", "5");
+    setSearchParams(newParams);
+    setStep(5);
   };
 
   const handleSubmitQr = async (e) => {
     e.preventDefault();
     setError(null);
 
-    if (!qrForm.petname || !qrForm.firstname || !qrForm.phone || !qrForm.email) {
-      setError("Please fill in all required fields (Pet Name, First Name, Phone, Email)");
+    if (!qrForm.firstname || !qrForm.phone || !qrForm.email) {
+      setError("Please fill in all required fields (First Name, Phone, Email)");
       return;
     }
 
@@ -337,8 +391,8 @@ function MaterialSelection() {
     e.preventDefault();
     setError(null);
 
-    if (!engraveForm.petname || !engraveForm.line1 || !engraveForm.name || !engraveForm.email || !engraveForm.phone) {
-      setError("Please fill in all required fields (Pet Name, Line 1, Your Name, Email, Phone)");
+    if (!engraveForm.name || !engraveForm.email || !engraveForm.phone) {
+      setError("Please fill in all required fields (Your Name, Email, Phone)");
       return;
     }
 
@@ -359,7 +413,7 @@ function MaterialSelection() {
     return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  const saveContactAndCreateOrder = async (contactData, orderData, hasQrCode) => {
+  const saveContactAndCreateOrder = async (contactData, hasQrCode) => {
     const saveResponse = await saveContact(contactData);
     if (!saveResponse) {
       throw new Error("Failed to save contact information");
@@ -371,8 +425,7 @@ function MaterialSelection() {
     }
 
     const orderid = await createOrder({
-      contactid,
-      ...orderData,
+      id: contactid,
       has_qr_code: hasQrCode,
       amount: Math.round(selectedMaterial.price * 100),
       currency: "usd",
@@ -387,11 +440,88 @@ function MaterialSelection() {
     return { contactid, orderid };
   };
 
+  // Helper function to map tag data to tag table format
+  const mapTagData = (orderid, side1Config, side2Config, orderType, qrCodeSide = 2) => {
+    console.log('mapTagData - Input parameters:', {
+      orderid,
+      side1Config,
+      side2Config,
+      orderType,
+      qrCodeSide
+    });
+
+    const tagData = {
+      orderid: orderid,
+      tagside: [],
+      text_line_1: [],
+      text_line_2: '',
+      text_line_3: '',
+      text_line_4: [],
+      text_line_5: '',
+      text_line_6: '',
+      notes: ''
+    };
+
+    // Side 1: Up to 3 lines of text
+    const side1Line1 = side1Config?.line1 || '';
+    const side1Line2 = side1Config?.line2 || '';
+    const side1Line3 = side1Config?.line3 || '';
+    
+    if (side1Line1 || side1Line2 || side1Line3) {
+      tagData.tagside.push('1');
+      if (side1Line1) {
+        tagData.text_line_1.push(side1Line1);
+      }
+      if (side1Line2) {
+        tagData.text_line_2 = side1Line2;
+      }
+      if (side1Line3) {
+        tagData.text_line_3 = side1Line3;
+      }
+    }
+
+    // Side 2: Up to 3 lines of text (QR code handled separately for database orders)
+    const side2Line1 = side2Config?.line1 || '';
+    const side2Line2 = side2Config?.line2 || '';
+    const side2Line3 = side2Config?.line3 || '';
+    
+    if (side2Line1 || side2Line2 || side2Line3) {
+      tagData.tagside.push('2');
+      if (side2Line1) {
+        tagData.text_line_4.push(side2Line1);
+      }
+      if (side2Line2) {
+        tagData.text_line_5 = side2Line2;
+      }
+      if (side2Line3) {
+        tagData.text_line_6 = side2Line3;
+      }
+    }
+
+    console.log('mapTagData - Mapped tag data:', JSON.stringify(tagData, null, 2));
+    return tagData;
+  };
+
   const handleConfirmOrder = async () => {
     setIsSubmitting(true);
     setError(null);
 
+    // Validate required checkout fields
     if (orderType === "database") {
+      if (!qrForm.firstname || !qrForm.email || !qrForm.phone || !qrForm.address_line_1) {
+        setError("Please fill in all required checkout fields (First Name, Email, Phone, Street Address)");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const phoneValidation = validatePhoneNumber(qrForm.phone);
+      if (!phoneValidation.isValid) {
+        setError(phoneValidation.error);
+        setPhoneErrors((prev) => ({ ...prev, qr: phoneValidation.error }));
+        setIsSubmitting(false);
+        return;
+      }
+
       let userId = qrForm.userid || generateUserId();
       setQrForm((prev) => ({ ...prev, userid: userId }));
 
@@ -402,7 +532,7 @@ function MaterialSelection() {
         firstname: qrForm.firstname,
         lastname: qrForm.lastname || "",
         fullname: fullname,
-        petname: qrForm.petname,
+        petname: "", // No longer using petname in contact
         phone: unformattedPhone,
         address_line_1: qrForm.address_line_1 || "",
         address_line_2: qrForm.address_line_2 || "",
@@ -410,15 +540,19 @@ function MaterialSelection() {
       };
 
       try {
-        const { contactid, orderid } = await saveContactAndCreateOrder(
-          contactData,
-          {
-            tag_text_line_1: qrForm.petname || "",
-            tag_text_line_2: qrForm.firstname || "",
-            tag_text_line_3: qrForm.phone || "",
-          },
-          true
-        );
+        const { contactid, orderid } = await saveContactAndCreateOrder(contactData, true);
+
+        // Save tag information to tag table
+        if (orderid) {
+          const tagData = mapTagData(orderid, side1Config, side2Config, "database", qrCodeSide);
+          console.log('handleConfirmOrder (database) - Calling saveTag with:', JSON.stringify(tagData, null, 2));
+          const tagResult = await saveTag(tagData);
+          if (!tagResult) {
+            console.warn("Failed to save tag information, but continuing with order");
+          } else {
+            console.log("Tag information saved successfully:", tagResult);
+          }
+        }
 
         const orderData = {
           material: selectedMaterial,
@@ -426,7 +560,6 @@ function MaterialSelection() {
           contactInfo: {
             firstname: qrForm.firstname,
             lastname: qrForm.lastname || "",
-            petname: qrForm.petname,
             address_line_1: qrForm.address_line_1 || "",
             address_line_2: qrForm.address_line_2 || "",
             phone: qrForm.phone,
@@ -451,6 +584,21 @@ function MaterialSelection() {
         setIsSubmitting(false);
       }
     } else {
+      // Validate required checkout fields for engrave orders
+      if (!engraveForm.name || !engraveForm.email || !engraveForm.phone || !engraveForm.address_line_1) {
+        setError("Please fill in all required checkout fields (Name, Email, Phone, Street Address)");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const phoneValidation = validatePhoneNumber(engraveForm.phone);
+      if (!phoneValidation.isValid) {
+        setError(phoneValidation.error);
+        setPhoneErrors((prev) => ({ ...prev, engrave: phoneValidation.error }));
+        setIsSubmitting(false);
+        return;
+      }
+
       try {
         const firstname = engraveForm.name.split(" ")[0] || engraveForm.name;
         const lastname = engraveForm.name.split(" ").slice(1).join(" ") || "";
@@ -460,39 +608,42 @@ function MaterialSelection() {
           firstname: firstname,
           lastname: lastname,
           fullname: engraveForm.name,
-          petname: engraveForm.petname,
+          petname: "", // No longer using petname in contact
           phone: unformattedPhone,
           address_line_1: engraveForm.address_line_1 || "",
           address_line_2: engraveForm.address_line_2 || "",
           address_line_3: engraveForm.address_line_3 || "",
         };
 
+        console.log("contactData: ", contactData);
         const { contactid: savedContactId, orderid: savedOrderId } = await saveContactAndCreateOrder(
           contactData,
-          {
-            tag_text_line_1: engraveForm.line1 || "",
-            tag_text_line_2: engraveForm.line2 || "",
-            tag_text_line_3: engraveForm.line3 || "",
-          },
           false
         );
+
+        // Save tag information to tag table
+        if (savedOrderId) {
+          const tagData = mapTagData(savedOrderId, side1Config, side2Config, "engrave", 2);
+          console.log('handleConfirmOrder (engrave) - Calling saveTag with:', JSON.stringify(tagData, null, 2));
+          const tagResult = await saveTag(tagData);
+          if (!tagResult) {
+            console.warn("Failed to save tag information, but continuing with order");
+          } else {
+            console.log("Tag information saved successfully:", tagResult);
+          }
+        }
 
         const orderData = {
           material: selectedMaterial,
           orderType: "engrave",
-          petname: engraveForm.petname,
-          engravingText: {
-            line1: engraveForm.line1,
-            line2: engraveForm.line2,
-            line3: engraveForm.line3,
-          },
           contactInfo: {
             firstname: firstname,
             lastname: lastname,
             fullname: engraveForm.name,
-            petname: engraveForm.petname,
             email: engraveForm.email,
             phone: engraveForm.phone,
+            address_line_1: engraveForm.address_line_1 || "",
+            address_line_2: engraveForm.address_line_2 || "",
           },
           notificationEmail: engraveForm.email,
           contactid: savedContactId,
@@ -652,7 +803,7 @@ function MaterialSelection() {
                     <img
                       src={shapeData.defaultImage}
                       alt={shapeData.name}
-                      className="max-w-full max-h-full object-contain"
+                      className="max-w-full max-h-full object-contain dark:brightness-110 dark:contrast-105"
                     />
                   </div>
                   <h3 className="text-lg font-bold mb-2 text-light-text dark:text-dark-text text-center">
@@ -696,7 +847,7 @@ function MaterialSelection() {
                     <img
                       src={colorOption.image}
                       alt={`${siliconeShapes[selectedShape].name} - ${colorOption.name}`}
-                      className="max-w-full max-h-full object-contain"
+                      className="max-w-full max-h-full object-contain dark:brightness-110 dark:contrast-105"
                     />
                   </div>
                   <h3 className="text-sm font-bold text-center text-light-text dark:text-dark-text">
@@ -726,7 +877,7 @@ function MaterialSelection() {
                 <img
                   src={selectedMaterial.image}
                   alt={`${selectedMaterial.shapeName} - ${selectedMaterial.name}`}
-                  className="max-w-full max-h-full object-contain"
+                  className="max-w-full max-h-full object-contain dark:brightness-110 dark:contrast-105"
                 />
               </div>
               <div>
@@ -801,7 +952,7 @@ function MaterialSelection() {
                 <img
                   src={selectedMaterial.image}
                   alt={`${selectedMaterial.shapeName} - ${selectedMaterial.name}`}
-                  className="max-w-full max-h-full object-contain"
+                  className="max-w-full max-h-full object-contain dark:brightness-110 dark:contrast-105"
                 />
               </div>
               <div>
@@ -815,404 +966,253 @@ function MaterialSelection() {
             </div>
 
             <h2 className="text-xl font-bold mb-2 text-light-text dark:text-dark-text">
-              {orderType === "database" ? "Enter Your Information" : "Enter Tag Details"}
+              Design Your Tag
             </h2>
             <p className="text-light-textMuted dark:text-dark-textMuted mb-6 text-sm">
-              {orderType === "database"
-                ? "We'll save your contact info securely and generate a QR code for your tag"
-                : "Customize your tag with your pet's information"}
+              Enter up to 3 lines of text for each side. Start with Side 1, then flip to design Side 2.
             </p>
 
-            {orderType === "database" ? (
-              <form onSubmit={handleSubmitQr} className="space-y-4">
-                <TagPreview
-                  material={selectedMaterial}
-                  orderType="database"
-                  formData={qrForm}
-                  qrCodePosition={qrCodePosition}
-                  onQrPositionChange={setQrCodePosition}
-                  side1Config={side1Config}
-                  side2Config={side2Config}
-                  qrCodeSide={qrCodeSide}
-                />
-
-                <div className="space-y-3">
-                  <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
-                    Pet Information
-                  </label>
-
-                  <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Pet Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="petname"
-                      value={qrForm.petname}
-                      onChange={handleQrFormChange}
-                      placeholder="e.g., Max or Fluffy"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Owner Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="firstname"
-                      value={qrForm.firstname}
-                      onChange={handleQrFormChange}
-                      placeholder="Your full name"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                      required
-                    />
-                  </div>
+            {/* Unified Tag Design Form */}
+            <form onSubmit={handleSubmitTagDesign} className="space-y-4">
+              {/* Side-by-side layout: Preview on left, Form on right */}
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Left: Tag Preview */}
+                <div className="lg:sticky lg:top-4 lg:self-start">
+                  <TagPreview
+                    material={selectedMaterial}
+                    orderType={orderType}
+                    formData={orderType === "database" ? qrForm : engraveForm}
+                    qrCodePosition={qrCodePosition}
+                    onQrPositionChange={setQrCodePosition}
+                    side1Config={side1Config}
+                    side2Config={side2Config}
+                    qrCodeSide={qrCodeSide}
+                    selectedFont={selectedFont}
+                    textCase={textCase}
+                    onTextCaseChange={setTextCase}
+                  />
                 </div>
 
-                <div className="pt-3 border-t border-light-border dark:border-dark-border space-y-3">
-                  <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
-                    Address Information
-                  </label>
-
+                {/* Right: Form Fields */}
+                <div className="space-y-4">
+                  {/* Font Selection - applies to both sides */}
                   <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Street Address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="address_line_1"
-                      value={qrForm.address_line_1}
-                      onChange={handleQrFormChange}
-                      placeholder="123 Main St"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                      required
+                    <FontDropdown
+                      selectedFont={selectedFont}
+                      onFontChange={handleFontChange}
+                      previewText={side1Config.line1 || side2Config.line1 || "Sample Text"}
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Apt/Unit (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      name="address_line_2"
-                      value={qrForm.address_line_2}
-                      onChange={handleQrFormChange}
-                      placeholder="Apt 4B"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-light-border dark:border-dark-border space-y-3">
-                  <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
-                    Contact Information
-                  </label>
-
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                        Email <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={qrForm.email}
-                        onChange={handleQrFormChange}
-                        placeholder="your@email.com"
-                        className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                        required
-                      />
+                  {/* Side Indicator and Flip Button */}
+                  <div className="flex items-center justify-between p-3 bg-light-surface dark:bg-dark-surfaceLight rounded-lg border border-light-border dark:border-dark-border">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all ${
+                          designingSide === 1 
+                            ? 'bg-btn-primary dark:bg-btn-primary-dark text-white scale-110' 
+                            : 'bg-light-surface dark:bg-dark-surface text-light-textMuted dark:text-dark-textMuted'
+                        }`}>
+                          1
+                        </div>
+                        <span className={`text-xs font-medium ${
+                          designingSide === 1 
+                            ? 'text-light-primary dark:text-dark-primary' 
+                            : 'text-light-textMuted dark:text-dark-textMuted'
+                        }`}>
+                          {side1Config.line1 || side1Config.line2 || side1Config.line3 ? '✓' : ''} Side 1
+                        </span>
+                      </div>
+                      <div className="text-light-textMuted dark:text-dark-textMuted">|</div>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all ${
+                          designingSide === 2 
+                            ? 'bg-btn-primary dark:bg-btn-primary-dark text-white scale-110' 
+                            : 'bg-light-surface dark:bg-dark-surface text-light-textMuted dark:text-dark-textMuted'
+                        }`}>
+                          2
+                        </div>
+                        <span className={`text-xs font-medium ${
+                          designingSide === 2 
+                            ? 'text-light-primary dark:text-dark-primary' 
+                            : 'text-light-textMuted dark:text-dark-textMuted'
+                        }`}>
+                          {side2Config.line1 || side2Config.line2 || side2Config.line3 ? '✓' : ''} Side 2
+                        </span>
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleFlipDesignSide();
+                      }}
+                      className="flex items-center gap-1 text-sm text-light-primary dark:text-dark-primary hover:text-light-primaryHover dark:hover:text-dark-primaryHover transition-colors px-3 py-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surfaceHover"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      <span>Switch to Side {designingSide === 1 ? 2 : 1}</span>
+                    </button>
+                  </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                        Phone <span className="text-red-500">*</span>
+                  {/* Side 1 Inputs */}
+                  {designingSide === 1 && (
+                    <div className="space-y-3 transition-opacity duration-300">
+                      <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
+                        Side 1 Text (Front)
                       </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={qrForm.phone}
-                        onChange={handleQrFormChange}
-                        placeholder="(555) 123-4567"
-                        maxLength={14}
-                        className={`w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all text-light-text dark:text-dark-text ${
-                          phoneErrors.qr ? 'border-red-500' : 'border-light-border dark:border-dark-border'
-                        }`}
-                        required
-                      />
-                      {phoneErrors.qr && (
-                        <p className="text-red-500 text-xs mt-1">{phoneErrors.qr}</p>
-                      )}
-                      {!phoneErrors.qr && qrForm.phone && (
-                        <p className="text-green-600 text-xs mt-1">✓ Valid phone number</p>
-                      )}
+                      <div>
+                        <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                          Line 1 <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={side1Config.line1}
+                          onChange={(e) => handleTagTextChange(1, 'line1', e.target.value)}
+                          placeholder="e.g., Pet Name"
+                          maxLength={25}
+                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                          Line 2 (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={side1Config.line2}
+                          onChange={(e) => handleTagTextChange(1, 'line2', e.target.value)}
+                          placeholder="e.g., Additional info"
+                          maxLength={25}
+                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                          Line 3 (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={side1Config.line3}
+                          onChange={(e) => handleTagTextChange(1, 'line3', e.target.value)}
+                          placeholder="e.g., More details"
+                          maxLength={25}
+                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                        />
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  )}
 
-                {error && (
-                  <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
-                    <p className="text-red-800 text-sm">{error}</p>
-                  </div>
-                )}
+                  {/* Side 2 Inputs */}
+                  {designingSide === 2 && (
+                    <div className="space-y-3 transition-opacity duration-300">
+                      <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
+                        Side 2 Text (Back)
+                        {orderType === "database" && (
+                          <span className="text-xs text-light-textMuted dark:text-dark-textMuted ml-2">
+                            (QR code will be added automatically)
+                          </span>
+                        )}
+                      </label>
+                      <div>
+                        <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                          Line 1 <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={side2Config.line1}
+                          onChange={(e) => handleTagTextChange(2, 'line1', e.target.value)}
+                          placeholder="e.g., Contact info"
+                          maxLength={25}
+                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                          Line 2 (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={side2Config.line2}
+                          onChange={(e) => handleTagTextChange(2, 'line2', e.target.value)}
+                          placeholder="e.g., Additional info"
+                          maxLength={25}
+                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                          Line 3 (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={side2Config.line3}
+                          onChange={(e) => handleTagTextChange(2, 'line3', e.target.value)}
+                          placeholder="e.g., More details"
+                          maxLength={25}
+                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                        />
+                      </div>
+                    </div>
+                  )}
 
-                <div className="flex gap-3 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newParams = new URLSearchParams(searchParams);
-                      newParams.set("step", "3");
-                      setSearchParams(newParams);
-                      setStep(3);
-                    }}
-                    className="flex-1 px-5 py-2.5 text-sm border-2 border-light-border dark:border-dark-border rounded-lg font-semibold text-light-text dark:text-dark-text bg-white dark:bg-dark-surface hover:bg-light-surface dark:hover:bg-dark-surfaceHover transition-all"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex-1 px-5 py-2.5 text-sm bg-btn-primary dark:bg-btn-primary-dark text-white rounded-lg font-bold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                  >
-                    {isSubmitting ? "Submitting..." : "Continue to Review"}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleSubmitEngrave} className="space-y-4">
-                <TagPreview
-                  material={selectedMaterial}
-                  orderType="engrave"
-                  formData={engraveForm}
-                  side1Config={side1Config}
-                  side2Config={side2Config}
-                  qrCodeSide={qrCodeSide}
-                />
+                  {error && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 p-3 rounded">
+                      <p className="text-red-800 dark:text-red-300 text-sm">{error}</p>
+                    </div>
+                  )}
 
-                <div className="pt-3 border-t border-light-border dark:border-dark-border space-y-3">
-                  <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
-                    Side 1: Pet Name (Front)
-                  </label>
-
-                  <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Font Style for Pet Name
-                      <span className="text-light-textMuted dark:text-dark-textMuted font-normal block mt-1 text-xs">
-                        Optimized for laser engraving readability
+                  {/* Progress indicator */}
+                  <div className="pt-3 border-t border-light-border dark:border-dark-border">
+                    <div className="flex items-center justify-between text-xs text-light-textMuted dark:text-dark-textMuted mb-3">
+                      <span>Design Progress:</span>
+                      <span className="font-semibold text-light-text dark:text-dark-text">
+                        {[
+                          side1Config.line1 || side1Config.line2 || side1Config.line3 ? 'Side 1' : null,
+                          side2Config.line1 || side2Config.line2 || side2Config.line3 ? 'Side 2' : null
+                        ].filter(Boolean).join(' & ') || 'Not started'}
                       </span>
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSide1Config(prev => ({ ...prev, fontType: 'bold' }))}
-                        className={`px-3 py-3 text-xs rounded-lg border-2 transition-colors ${
-                          side1Config.fontType === 'bold'
-                            ? 'border-light-primary dark:border-dark-primary bg-light-surface dark:bg-dark-surfaceLight text-light-primary dark:text-dark-primary'
-                            : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-surface text-light-text dark:text-dark-text hover:border-light-textMuted dark:hover:border-dark-textMuted'
-                        }`}
-                        style={side1Config.fontType === 'bold' ? { fontFamily: '"Bebas Neue", sans-serif', letterSpacing: '0.05em' } : {}}
-                      >
-                        <div className="font-semibold mb-0.5">Bold</div>
-                        <div className="text-xs opacity-75">Bebas Neue</div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSide1Config(prev => ({ ...prev, fontType: 'elegant' }))}
-                        className={`px-3 py-3 text-xs rounded-lg border-2 transition-colors ${
-                          side1Config.fontType === 'elegant'
-                            ? 'border-light-primary dark:border-dark-primary bg-light-surface dark:bg-dark-surfaceLight text-light-primary dark:text-dark-primary'
-                            : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-surface text-light-text dark:text-dark-text hover:border-light-textMuted dark:hover:border-dark-textMuted'
-                        }`}
-                        style={side1Config.fontType === 'elegant' ? { fontFamily: '"Playfair Display", serif', fontStyle: 'italic' } : {}}
-                      >
-                        <div className="font-semibold mb-0.5">Elegant</div>
-                        <div className="text-xs opacity-75">Playfair Display</div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSide1Config(prev => ({ ...prev, fontType: 'playful' }))}
-                        className={`px-3 py-3 text-xs rounded-lg border-2 transition-colors ${
-                          side1Config.fontType === 'playful'
-                            ? 'border-light-primary dark:border-dark-primary bg-light-surface dark:bg-dark-surfaceLight text-light-primary dark:text-dark-primary'
-                            : 'border-light-border dark:border-dark-border bg-white dark:bg-dark-surface text-light-text dark:text-dark-text hover:border-light-textMuted dark:hover:border-dark-textMuted'
-                        }`}
-                        style={side1Config.fontType === 'playful' ? { fontFamily: '"Quicksand", sans-serif', fontWeight: '600' } : {}}
-                      >
-                        <div className="font-semibold mb-0.5">Playful</div>
-                        <div className="text-xs opacity-75">Quicksand</div>
-                      </button>
                     </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
-                    Pet Information
-                  </label>
-
-                  <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Pet Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="petname"
-                      value={engraveForm.petname}
-                      onChange={handleEngraveChange}
-                      placeholder="e.g., Max or Fluffy"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-light-border dark:border-dark-border space-y-3">
-                  <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
-                    Side 2: Engraving Text (Back - Max 3 lines)
-                  </label>
-
-                  <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Line 1 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="line1"
-                      value={engraveForm.line1}
-                      onChange={handleEngraveChange}
-                      placeholder="e.g., Your Name or Address"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                      maxLength={25}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Line 2 (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      name="line2"
-                      value={engraveForm.line2}
-                      onChange={handleEngraveChange}
-                      placeholder="e.g., City, ST"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                      maxLength={25}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Line 3 (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      name="line3"
-                      value={engraveForm.line3}
-                      onChange={handleEngraveChange}
-                      placeholder="e.g., Phone Number"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                      maxLength={25}
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-light-border dark:border-dark-border space-y-3">
-                  <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
-                    Contact Information (for order notification)
-                  </label>
-
-                  <div>
-                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                      Your Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={engraveForm.name}
-                      onChange={handleEngraveChange}
-                      placeholder="John Doe"
-                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                        Email <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={engraveForm.email}
-                        onChange={handleEngraveChange}
-                        placeholder="john@example.com"
-                        className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
-                        required
+                    <div className="w-full bg-light-surface dark:bg-dark-surfaceLight rounded-full h-2">
+                      <div 
+                        className="bg-btn-primary dark:bg-btn-primary-dark h-2 rounded-full transition-all duration-300"
+                        style={{ 
+                          width: `${[
+                            side1Config.line1 || side1Config.line2 || side1Config.line3,
+                            side2Config.line1 || side2Config.line2 || side2Config.line3
+                          ].filter(Boolean).length * 50}%` 
+                        }}
                       />
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                        Phone <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={engraveForm.phone}
-                        onChange={handleEngraveChange}
-                        placeholder="(555) 123-4567"
-                        maxLength={14}
-                        className={`w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all text-light-text dark:text-dark-text ${
-                          phoneErrors.engrave ? 'border-red-500' : 'border-light-border dark:border-dark-border'
-                        }`}
-                        required
-                      />
-                      {phoneErrors.engrave && (
-                        <p className="text-red-500 text-xs mt-1">{phoneErrors.engrave}</p>
-                      )}
-                      {!phoneErrors.engrave && engraveForm.phone && (
-                        <p className="text-green-600 text-xs mt-1">✓ Valid phone number</p>
-                      )}
-                    </div>
+                  <div className="flex gap-3 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newParams = new URLSearchParams(searchParams);
+                        newParams.set("step", "3");
+                        setSearchParams(newParams);
+                        setStep(3);
+                      }}
+                      className="flex-1 px-5 py-2.5 text-sm border-2 border-light-border dark:border-dark-border rounded-lg font-semibold text-light-text dark:text-dark-text bg-white dark:bg-dark-surface hover:bg-light-surface dark:hover:bg-dark-surfaceHover transition-all"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !(side1Config.line1 || side1Config.line2 || side1Config.line3) || !(side2Config.line1 || side2Config.line2 || side2Config.line3)}
+                      className="flex-1 px-5 py-2.5 text-sm bg-btn-primary dark:bg-btn-primary-dark text-white rounded-lg font-bold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                      {isSubmitting ? "Submitting..." : "Continue to Review"}
+                    </button>
                   </div>
                 </div>
+              </div>
+            </form>
 
-                {error && (
-                  <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded">
-                    <p className="text-red-800 text-sm">{error}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-3 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newParams = new URLSearchParams(searchParams);
-                      newParams.set("step", "3");
-                      setSearchParams(newParams);
-                      setStep(3);
-                    }}
-                    className="flex-1 px-5 py-2.5 text-sm border-2 border-light-border dark:border-dark-border rounded-lg font-semibold text-light-text dark:text-dark-text bg-white dark:bg-dark-surface hover:bg-light-surface dark:hover:bg-dark-surfaceHover transition-all"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex-1 px-5 py-2.5 text-sm bg-btn-primary dark:bg-btn-primary-dark text-white rounded-lg font-bold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                  >
-                    {isSubmitting ? "Submitting..." : "Continue to Review"}
-                  </button>
-                </div>
-              </form>
-            )}
           </div>
         )}
 
@@ -1234,6 +1234,9 @@ function MaterialSelection() {
                 side1Config={side1Config}
                 side2Config={side2Config}
                 qrCodeSide={qrCodeSide}
+                selectedFont={selectedFont}
+                textCase={textCase}
+                onTextCaseChange={setTextCase}
               />
             </div>
 
@@ -1252,14 +1255,22 @@ function MaterialSelection() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-light-textMuted dark:text-dark-textMuted font-medium">Pet Name:</span>
-                  <span className="font-bold text-light-text dark:text-dark-text">
-                    {orderType === "database" ? qrForm.petname : engraveForm.petname}
+                  <span className="text-light-textMuted dark:text-dark-textMuted font-medium">Side 1 Text:</span>
+                  <span className="font-bold text-light-text dark:text-dark-text text-right">
+                    {[side1Config.line1, side1Config.line2, side1Config.line3].filter(Boolean).join(' • ') || 'None'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-light-textMuted dark:text-dark-textMuted font-medium">Side 2 Text:</span>
+                  <span className="font-bold text-light-text dark:text-dark-text text-right">
+                    {[side2Config.line1, side2Config.line2, side2Config.line3].filter(Boolean).join(' • ') || 'None'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-light-textMuted dark:text-dark-textMuted font-medium">Font Style:</span>
-                  <span className="font-bold text-light-text dark:text-dark-text capitalize">{side1Config.fontType}</span>
+                  <span className="font-bold text-light-text dark:text-dark-text">
+                    {selectedFont ? AVAILABLE_FONTS.find(f => f.id === selectedFont)?.name || selectedFont : 'Default'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-lg pt-3 border-t border-light-border dark:border-dark-border">
                   <span className="text-light-text dark:text-dark-text font-semibold">Subtotal:</span>
@@ -1270,26 +1281,139 @@ function MaterialSelection() {
               </div>
             </div>
 
+            {/* Checkout Form - Contact Info & Address */}
             <div className="border-t border-light-border dark:border-dark-border pt-4 mt-4">
-              <h3 className="text-lg font-bold mb-4 text-light-text dark:text-dark-text">Contact Information</h3>
-              <div className="bg-light-surface dark:bg-dark-surfaceLight border border-light-border dark:border-dark-border rounded-lg p-4 space-y-2">
-                {orderType === "database" ? (
-                  <>
-                    <div><span className="text-light-textMuted dark:text-dark-textMuted font-medium">Name:</span> <span className="text-light-text dark:text-dark-text">{qrForm.firstname} {qrForm.lastname}</span></div>
-                    <div><span className="text-light-textMuted dark:text-dark-textMuted font-medium">Email:</span> <span className="text-light-text dark:text-dark-text">{qrForm.email}</span></div>
-                    <div><span className="text-light-textMuted dark:text-dark-textMuted font-medium">Phone:</span> <span className="text-light-text dark:text-dark-text">{qrForm.phone}</span></div>
-                    {qrForm.address_line_1 && (
-                      <div><span className="text-light-textMuted dark:text-dark-textMuted font-medium">Address:</span> <span className="text-light-text dark:text-dark-text">{qrForm.address_line_1} {qrForm.address_line_2}</span></div>
+              <h3 className="text-lg font-bold mb-4 text-light-text dark:text-dark-text">Checkout Information</h3>
+              <p className="text-sm text-light-textMuted dark:text-dark-textMuted mb-4">
+                Please provide your contact information and shipping address
+              </p>
+              
+              <form onSubmit={(e) => { e.preventDefault(); handleConfirmOrder(); }} className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="firstname"
+                      value={orderType === "database" ? qrForm.firstname : engraveForm.name?.split(" ")[0] || ""}
+                      onChange={orderType === "database" ? handleQrFormChange : (e) => {
+                        const firstname = e.target.value;
+                        const lastname = engraveForm.name?.split(" ").slice(1).join(" ") || "";
+                        setEngraveForm(prev => ({ ...prev, name: [firstname, lastname].filter(Boolean).join(" ") }));
+                      }}
+                      placeholder="John"
+                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      name="lastname"
+                      value={orderType === "database" ? qrForm.lastname : engraveForm.name?.split(" ").slice(1).join(" ") || ""}
+                      onChange={orderType === "database" ? handleQrFormChange : (e) => {
+                        const firstname = engraveForm.name?.split(" ")[0] || "";
+                        const lastname = e.target.value;
+                        setEngraveForm(prev => ({ ...prev, name: [firstname, lastname].filter(Boolean).join(" ") }));
+                      }}
+                      placeholder="Doe"
+                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={orderType === "database" ? qrForm.email : engraveForm.email}
+                      onChange={orderType === "database" ? handleQrFormChange : handleEngraveChange}
+                      placeholder="your@email.com"
+                      className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                      Phone <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={orderType === "database" ? qrForm.phone : engraveForm.phone}
+                      onChange={orderType === "database" ? handleQrFormChange : handleEngraveChange}
+                      placeholder="(555) 123-4567"
+                      maxLength={14}
+                      className={`w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all text-light-text dark:text-dark-text ${
+                        (orderType === "database" ? phoneErrors.qr : phoneErrors.engrave) ? 'border-red-500' : 'border-light-border dark:border-dark-border'
+                      }`}
+                      required
+                    />
+                    {(orderType === "database" ? phoneErrors.qr : phoneErrors.engrave) && (
+                      <p className="text-red-500 dark:text-red-400 text-xs mt-1">{orderType === "database" ? phoneErrors.qr : phoneErrors.engrave}</p>
                     )}
-                  </>
-                ) : (
-                  <>
-                    <div><span className="text-light-textMuted dark:text-dark-textMuted font-medium">Name:</span> <span className="text-light-text dark:text-dark-text">{engraveForm.name}</span></div>
-                    <div><span className="text-light-textMuted dark:text-dark-textMuted font-medium">Email:</span> <span className="text-light-text dark:text-dark-text">{engraveForm.email}</span></div>
-                    <div><span className="text-light-textMuted dark:text-dark-textMuted font-medium">Phone:</span> <span className="text-light-text dark:text-dark-text">{engraveForm.phone}</span></div>
-                  </>
-                )}
-              </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-light-border dark:border-dark-border">
+                  <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-3">
+                    Shipping Address
+                  </label>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                        Street Address <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="address_line_1"
+                        value={orderType === "database" ? qrForm.address_line_1 : engraveForm.address_line_1}
+                        onChange={orderType === "database" ? handleQrFormChange : handleEngraveChange}
+                        placeholder="123 Main St"
+                        className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                        required
+                      />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                          Apt/Unit
+                        </label>
+                        <input
+                          type="text"
+                          name="address_line_2"
+                          value={orderType === "database" ? qrForm.address_line_2 : engraveForm.address_line_2}
+                          onChange={orderType === "database" ? handleQrFormChange : handleEngraveChange}
+                          placeholder="Apt 4B"
+                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                          Additional Info
+                        </label>
+                        <input
+                          type="text"
+                          name="address_line_3"
+                          value={orderType === "database" ? qrForm.address_line_3 : engraveForm.address_line_3}
+                          onChange={orderType === "database" ? handleQrFormChange : handleEngraveChange}
+                          placeholder="City, State, ZIP"
+                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
             </div>
 
             {error && (

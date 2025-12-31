@@ -66,32 +66,32 @@ module.exports = {
                     tagBorder: '#D1D5DB',       // Light gray border
                 },
                 
-                // DARK MODE - Deep backgrounds with bright text (EXISTING - ENHANCED)
+                // DARK MODE - Deep backgrounds with bright text (ENHANCED FOR BETTER CONTRAST)
                 dark: {
-                    // Backgrounds - deeper and richer
-                    bg: '#0F1419',              // Very dark blue-black
-                    surface: '#1A1F2E',         // Dark blue-gray
-                    surfaceHover: '#232936',    // Lighter on hover
-                    surfaceLight: '#2A3142',    // For elevated elements
+                    // Backgrounds - deeper and richer with better contrast
+                    bg: '#0A0E14',              // Very dark blue-black (improved from #0F1419)
+                    surface: '#151B26',         // Dark blue-gray (improved from #1A1F2E)
+                    surfaceHover: '#1E2532',    // Lighter on hover (improved from #232936)
+                    surfaceLight: '#252D3A',    // For elevated elements (improved from #2A3142)
                     
-                    // Text - high contrast
-                    text: '#F7FAFC',            // Off-white
-                    textMuted: '#A0AEC0',       // Medium gray
+                    // Text - high contrast (improved for better readability)
+                    text: '#FFFFFF',            // Pure white for maximum contrast (improved from #F7FAFC)
+                    textMuted: '#B8C5D6',       // Brighter gray for better readability (improved from #A0AEC0)
                     
-                    // Borders
-                    border: '#2D3748',          // Visible dark border
-                    borderStrong: '#4A5568',    // Stronger emphasis
+                    // Borders - more visible in dark mode
+                    border: '#374151',          // More visible dark border (improved from #2D3748)
+                    borderStrong: '#4B5563',    // Stronger emphasis (improved from #4A5568)
                     
-                    // Accents - Bright and punchy
-                    primary: '#FF8787',         // Brighter coral
-                    primaryHover: '#FF6B6B',    // Standard coral
-                    secondary: '#5EDDD6',       // Bright turquoise
-                    secondaryHover: '#4ECDC4',  // Standard turquoise
+                    // Accents - Bright and punchy with better contrast
+                    primary: '#FF9A9A',         // Even brighter coral for better visibility (improved from #FF8787)
+                    primaryHover: '#FF8787',    // Standard coral
+                    secondary: '#6EE7E0',       // Brighter turquoise (improved from #5EDDD6)
+                    secondaryHover: '#5EDDD6',  // Standard turquoise
                     accent: '#FFE66D',          // Warm yellow
                     
-                    // Tag display areas
-                    tagBg: '#232936',           // Slightly lighter than surface
-                    tagBorder: '#3A4556',       // Visible border
+                    // Tag display areas - better contrast
+                    tagBg: '#1E2532',           // Slightly lighter than surface (improved from #232936)
+                    tagBorder: '#3F4856',       // More visible border (improved from #3A4556)
                 },
             },
             

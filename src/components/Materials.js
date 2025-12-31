@@ -38,3 +38,5 @@ function MaterialSelector() {
     </div>
   );
 }
+
+export default MaterialSelector;
