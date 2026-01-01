@@ -182,6 +182,11 @@ function MaterialSelection() {
     fontId: DEFAULT_FONT.id
   });
   const [qrCodeSide, setQrCodeSide] = useState(2);
+  const [qrCodeText, setQrCodeText] = useState({
+    line1: '',
+    line2: '',
+    line3: ''
+  });
 
   // Listen to URL changes (browser back/forward buttons)
   useEffect(() => {
@@ -301,6 +306,10 @@ function MaterialSelection() {
     }
   };
 
+  const handleQrCodeTextChange = (line, value) => {
+    setQrCodeText((prev) => ({ ...prev, [line]: value }));
+  };
+
   // Handle font change - applies to both sides
   const handleFontChange = (fontId) => {
     setSelectedFont(fontId);
@@ -344,18 +353,35 @@ function MaterialSelection() {
     e.preventDefault();
     setError(null);
 
-    // Validate that at least one line is filled on each side
-    const side1HasText = side1Config.line1 || side1Config.line2 || side1Config.line3;
-    const side2HasText = side2Config.line1 || side2Config.line2 || side2Config.line3;
+    if (orderType === 'database') {
+      // For database orders, validate QR code text
+      if (!qrCodeText.line1 && !qrCodeText.line2 && !qrCodeText.line3) {
+        setError("Please enter at least one line of text to encode in the QR code");
+        return;
+      }
+      
+      // Validate that the non-QR side has text
+      const nonQrSide = qrCodeSide === 1 ? side2Config : side1Config;
+      const nonQrSideHasText = nonQrSide.line1 || nonQrSide.line2 || nonQrSide.line3;
+      
+      if (!nonQrSideHasText) {
+        setError(`Please enter at least one line of text for Side ${qrCodeSide === 1 ? 2 : 1} (the side without the QR code)`);
+        return;
+      }
+    } else {
+      // For engrave orders, validate both sides have text
+      const side1HasText = side1Config.line1 || side1Config.line2 || side1Config.line3;
+      const side2HasText = side2Config.line1 || side2Config.line2 || side2Config.line3;
 
-    if (!side1HasText) {
-      setError("Please enter at least one line of text for Side 1");
-      return;
-    }
+      if (!side1HasText) {
+        setError("Please enter at least one line of text for Side 1");
+        return;
+      }
 
-    if (!side2HasText) {
-      setError("Please enter at least one line of text for Side 2");
-      return;
+      if (!side2HasText) {
+        setError("Please enter at least one line of text for Side 2");
+        return;
+      }
     }
 
     // Move to review step
@@ -969,7 +995,9 @@ function MaterialSelection() {
               Design Your Tag
             </h2>
             <p className="text-light-textMuted dark:text-dark-textMuted mb-6 text-sm">
-              Enter up to 3 lines of text for each side. Start with Side 1, then flip to design Side 2.
+              {orderType === 'database' 
+                ? 'Enter the text to encode in the QR code (up to 3 lines), choose which side will have the QR code, and add text for the other side.'
+                : 'Enter up to 3 lines of text for each side. Start with Side 1, then flip to design Side 2.'}
             </p>
 
             {/* Unified Tag Design Form */}
@@ -987,6 +1015,7 @@ function MaterialSelection() {
                     side1Config={side1Config}
                     side2Config={side2Config}
                     qrCodeSide={qrCodeSide}
+                    qrCodeText={qrCodeText}
                     selectedFont={selectedFont}
                     textCase={textCase}
                     onTextCaseChange={setTextCase}
@@ -995,6 +1024,109 @@ function MaterialSelection() {
 
                 {/* Right: Form Fields */}
                 <div className="space-y-4">
+                  {/* QR Code Side Selection - only for database orders */}
+                  {orderType === 'database' && (
+                    <div className="mb-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                      <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-3">
+                        Choose QR Code Side
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setQrCodeSide(1)}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            qrCodeSide === 1
+                              ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-100 dark:bg-indigo-900/40'
+                              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-dark-surfaceLight hover:border-indigo-400 dark:hover:border-indigo-600'
+                          }`}
+                        >
+                          <div className="text-sm font-medium text-light-text dark:text-dark-text mb-1">
+                            Side 1
+                          </div>
+                          <div className="text-xs text-light-textMuted dark:text-dark-textMuted">
+                            QR code on front
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQrCodeSide(2)}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            qrCodeSide === 2
+                              ? 'border-indigo-600 dark:border-indigo-400 bg-indigo-100 dark:bg-indigo-900/40'
+                              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-dark-surfaceLight hover:border-indigo-400 dark:hover:border-indigo-600'
+                          }`}
+                        >
+                          <div className="text-sm font-medium text-light-text dark:text-dark-text mb-1">
+                            Side 2
+                          </div>
+                          <div className="text-xs text-light-textMuted dark:text-dark-textMuted">
+                            QR code on back
+                          </div>
+                        </button>
+                      </div>
+                      <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-2">
+                        The QR code will encode the text you enter below. The other side will display regular engraved text.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* QR Code Text Input - only for database orders */}
+                  {orderType === 'database' && (
+                    <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-3">
+                        Text to Encode in QR Code
+                        <span className="text-xs font-normal text-light-textMuted dark:text-dark-textMuted ml-2">
+                          (This text will be encoded in the QR code, not displayed as text)
+                        </span>
+                      </label>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                            Line 1 <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={qrCodeText.line1}
+                            onChange={(e) => handleQrCodeTextChange('line1', e.target.value)}
+                            placeholder="e.g., Pet Name: Max"
+                            maxLength={50}
+                            className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                            Line 2 (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={qrCodeText.line2}
+                            onChange={(e) => handleQrCodeTextChange('line2', e.target.value)}
+                            placeholder="e.g., Phone: 555-123-4567"
+                            maxLength={50}
+                            className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                            Line 3 (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={qrCodeText.line3}
+                            onChange={(e) => handleQrCodeTextChange('line3', e.target.value)}
+                            placeholder="e.g., Address: 123 Main St"
+                            maxLength={50}
+                            className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
+                        When scanned, the QR code will display these three lines of text.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Font Selection - applies to both sides */}
                   <div>
                     <FontDropdown
@@ -1060,6 +1192,16 @@ function MaterialSelection() {
                     <div className="space-y-3 transition-opacity duration-300">
                       <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
                         Side 1 Text (Front)
+                        {orderType === "database" && qrCodeSide === 1 && (
+                          <span className="text-xs text-light-textMuted dark:text-dark-textMuted ml-2">
+                            (QR code will be on this side)
+                          </span>
+                        )}
+                        {orderType === "database" && qrCodeSide === 2 && (
+                          <span className="text-xs text-light-textMuted dark:text-dark-textMuted ml-2">
+                            (Regular text engraving)
+                          </span>
+                        )}
                       </label>
                       <div>
                         <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
@@ -1109,9 +1251,14 @@ function MaterialSelection() {
                     <div className="space-y-3 transition-opacity duration-300">
                       <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
                         Side 2 Text (Back)
-                        {orderType === "database" && (
+                        {orderType === "database" && qrCodeSide === 2 && (
                           <span className="text-xs text-light-textMuted dark:text-dark-textMuted ml-2">
-                            (QR code will be added automatically)
+                            (QR code will be on this side)
+                          </span>
+                        )}
+                        {orderType === "database" && qrCodeSide === 1 && (
+                          <span className="text-xs text-light-textMuted dark:text-dark-textMuted ml-2">
+                            (Regular text engraving)
                           </span>
                         )}
                       </label>
@@ -1203,7 +1350,14 @@ function MaterialSelection() {
                     </button>
                     <button
                       type="submit"
-                      disabled={isSubmitting || !(side1Config.line1 || side1Config.line2 || side1Config.line3) || !(side2Config.line1 || side2Config.line2 || side2Config.line3)}
+                      disabled={
+                        isSubmitting || 
+                        (orderType === 'database' 
+                          ? (!qrCodeText.line1 && !qrCodeText.line2 && !qrCodeText.line3) ||
+                            (qrCodeSide === 1 ? !(side2Config.line1 || side2Config.line2 || side2Config.line3) : !(side1Config.line1 || side1Config.line2 || side1Config.line3))
+                          : !(side1Config.line1 || side1Config.line2 || side1Config.line3) || !(side2Config.line1 || side2Config.line2 || side2Config.line3)
+                        )
+                      }
                       className="flex-1 px-5 py-2.5 text-sm bg-btn-primary dark:bg-btn-primary-dark text-white rounded-lg font-bold hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
                       {isSubmitting ? "Submitting..." : "Continue to Review"}
@@ -1234,6 +1388,7 @@ function MaterialSelection() {
                 side1Config={side1Config}
                 side2Config={side2Config}
                 qrCodeSide={qrCodeSide}
+                qrCodeText={qrCodeText}
                 selectedFont={selectedFont}
                 textCase={textCase}
                 onTextCaseChange={setTextCase}
