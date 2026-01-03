@@ -1,11 +1,11 @@
 import React, {useState, useEffect} from 'react';
 import {loadStripe} from '@stripe/stripe-js';
-import {
-    PaymentElement,
-    Elements,
-    useStripe,
-    useElements,
-} from '@stripe/react-stripe-js';
+// import {
+//     PaymentElement,
+//     Elements,
+//     useStripe,
+//     useElements,
+// } from '@stripe/react-stripe-js';
 // import {STRIPE_API_KEY} from '../../env.json';
 
 // const stripePromise = loadStripe(STRIPE_API_KEY);

@@ -1,6 +1,6 @@
 // C:\Projects\LaserTags\src\components\FontSelector.js
 import React, { useState } from 'react';
-import { AVAILABLE_FONTS, getFontById } from '../config/fonts';
+import { AVAILABLE_FONTS, getFontById } from '../../config/fonts';
 import '../styles/fonts.css';
 
 const FontSelector = ({ selectedFont, onFontChange, previewText = "Bella" }) => {

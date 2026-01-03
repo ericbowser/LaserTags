@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Stage, Layer, Image as KonvaImage } from 'react-konva';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Download, RefreshCw } from 'lucide-react';
+import QRCode from 'qrcode';
 
 const QrcodeGenerator = () => {
   const navigate = useNavigate();
@@ -24,7 +25,9 @@ const QrcodeGenerator = () => {
   const [error, setError] = useState(null);
   const [qrSize, setQrSize] = useState(512); // High resolution for engraving
   const [marginSize, setMarginSize] = useState(4); // Quiet zone for better scanning
-  const svgRef = useRef(null);
+  const [qrCodeImage, setQrCodeImage] = useState(null);
+  const [qrCodeSvg, setQrCodeSvg] = useState(null);
+  const stageRef = useRef(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -38,7 +41,7 @@ const QrcodeGenerator = () => {
     }
   };
 
-  const generateQrCode = (e) => {
+  const generateQrCode = async (e) => {
     e.preventDefault();
     setError(null);
 
@@ -58,6 +61,42 @@ const QrcodeGenerator = () => {
     
     setQrCodeUrl(contactUrl);
     setFormData(prev => ({ ...prev, userid: userId }));
+
+    // Generate QR code image for Konva canvas
+    try {
+      const dataUrl = await QRCode.toDataURL(contactUrl, {
+        width: qrSize,
+        margin: marginSize,
+        errorCorrectionLevel: 'H',
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+
+      // Load image for Konva
+      const img = new window.Image();
+      img.src = dataUrl;
+      img.onload = () => {
+        setQrCodeImage(img);
+      };
+
+      // Also generate SVG for download
+      const svgString = await QRCode.toString(contactUrl, {
+        type: 'svg',
+        width: qrSize,
+        margin: marginSize,
+        errorCorrectionLevel: 'H',
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      setQrCodeSvg(svgString);
+    } catch (err) {
+      console.error('Error generating QR code:', err);
+      setError('Failed to generate QR code. Please try again.');
+    }
   };
 
   const generateUserId = () => {
@@ -66,11 +105,9 @@ const QrcodeGenerator = () => {
   };
 
   const downloadSVG = () => {
-    if (!svgRef.current) return;
+    if (!qrCodeSvg) return;
 
-    const svgElement = svgRef.current;
-    const svgData = new XMLSerializer().serializeToString(svgElement);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const svgBlob = new Blob([qrCodeSvg], { type: 'image/svg+xml;charset=utf-8' });
     const svgUrl = URL.createObjectURL(svgBlob);
     
     const downloadLink = document.createElement('a');
@@ -94,7 +131,49 @@ const QrcodeGenerator = () => {
     });
     setQrCodeUrl(null);
     setError(null);
+    setQrCodeImage(null);
+    setQrCodeSvg(null);
   };
+
+  // Update QR code when size or margin changes
+  useEffect(() => {
+    if (qrCodeUrl) {
+      const regenerateQrCode = async () => {
+        try {
+          const dataUrl = await QRCode.toDataURL(qrCodeUrl, {
+            width: qrSize,
+            margin: marginSize,
+            errorCorrectionLevel: 'H',
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF'
+            }
+          });
+
+          const img = new window.Image();
+          img.src = dataUrl;
+          img.onload = () => {
+            setQrCodeImage(img);
+          };
+
+          const svgString = await QRCode.toString(qrCodeUrl, {
+            type: 'svg',
+            width: qrSize,
+            margin: marginSize,
+            errorCorrectionLevel: 'H',
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF'
+            }
+          });
+          setQrCodeSvg(svgString);
+        } catch (err) {
+          console.error('Error regenerating QR code:', err);
+        }
+      };
+      regenerateQrCode();
+    }
+  }, [qrSize, marginSize, qrCodeUrl]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4">
@@ -299,20 +378,20 @@ const QrcodeGenerator = () => {
                 : 'Fill out the form and click "Generate QR Code" to see your QR code here.'}
             </p>
 
-            {qrCodeUrl && (
+            {qrCodeUrl && qrCodeImage && (
               <div className="space-y-6">
                 {/* QR Code Display */}
                 <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-8 border-2 border-dashed border-gray-300">
-                  <div ref={svgRef} className="bg-white p-4 rounded-lg">
-                    <QRCodeSVG
-                      value={qrCodeUrl}
-                      size={qrSize}
-                      level="H" // High error correction for better scanning on silicone
-                      marginSize={marginSize}
-                      bgColor="#FFFFFF"
-                      fgColor="#000000"
-                      includeMargin={true}
-                    />
+                  <div className="bg-white p-4 rounded-lg">
+                    <Stage width={qrSize} height={qrSize} ref={stageRef}>
+                      <Layer>
+                        <KonvaImage
+                          image={qrCodeImage}
+                          width={qrSize}
+                          height={qrSize}
+                        />
+                      </Layer>
+                    </Stage>
                   </div>
                 </div>
 

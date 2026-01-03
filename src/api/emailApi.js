@@ -1,8 +1,8 @@
 ﻿import axios from 'axios';
-import {ASSIST_EMAIL_URL} from '../../env.json';
 
 async function sendEmail(emailParams = {}) {
     const {from, to, subject, message} = emailParams;
+    const ASSIST_EMAIL_URL = import.meta.env.VITE_ASSIST_EMAIL_URL;
     console.log('email url: ', ASSIST_EMAIL_URL)
     try {
         const response = await axios.post(

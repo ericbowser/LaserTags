@@ -1,9 +1,9 @@
 ﻿import React, { useEffect, useState } from "react";
-import { getContact, saveContact, updateContact } from "../api/tagApi";
+import { getContact, saveContact, updateContact } from "../../api/tagApi";
 import { useParams } from "react-router-dom";
-import { useAuth } from "./Auth0/Authorize";
+import { useAuth } from "../auth/Auth0/Authorize";
 import { isEmpty } from "lodash";
-import DarkModeToggle from "./DarkModeToggle";
+import DarkModeToggle from "../theme/DarkModeToggle";
 
 const Contact = () => {
   const { user, isAuthenticated, saveContactToAuth0 } = useAuth();

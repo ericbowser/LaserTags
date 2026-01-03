@@ -2,53 +2,54 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, ArrowRight, Database, FileText, CheckCircle, RotateCcw } from "lucide-react";
 import axios from "axios";
-import { LASER_BACKEND_BASE_URL } from "../../env.json";
-import StripeCheckout from "./StripeCheckout";
-import TagPreview from "./TagPreview";
-import FontDropdown from "./FontDropdown";
-import { generateQrCodeSVG, generateQrCodeUrl } from "../utils/qrCodeUtils";
-import { formatPhoneNumber, validatePhoneNumber, getUnformattedPhone } from "../utils/phoneUtils";
-import { saveContact, saveQrCode, createOrder, saveTag } from "../api/tagApi";
-import DarkModeToggle from "./DarkModeToggle";
-import { DEFAULT_FONT, AVAILABLE_FONTS } from "../config/fonts";
-import "../styles/fonts.css";
+import StripeCheckout from "../checkout/StripeCheckout";
+
+const LASER_BACKEND_BASE_URL = import.meta.env.VITE_LASER_BACKEND_BASE_URL;
+import TagPreview from "../tag/TagPreview";
+import FontDropdown from "../tag/FontDropdown";
+import { generateQrCodeSVG, generateQrCodeUrl } from "../../utils/qrCodeUtils";
+import { formatPhoneNumber, validatePhoneNumber, getUnformattedPhone } from "../../utils/phoneUtils";
+import { saveContact, saveQrCode, createOrder, saveTag, saveShipping } from "../../api/tagApi";
+import DarkModeToggle from "../theme/DarkModeToggle";
+import { DEFAULT_FONT, AVAILABLE_FONTS } from "../../config/fonts";
+import "../../assets/styles/fonts.css";
 
 // Import all silicone tag images
 // Bone shapes
-import darkblueBone from "../assets/Materials/Silicone/darkblue_bone.png";
-import grayBone from "../assets/Materials/Silicone/gray_bone.png";
-import lightpinkBone from "../assets/Materials/Silicone/lightpink_bone.png";
-import offwhiteBone from "../assets/Materials/Silicone/offwhite_bone.png";
-import orangeBone from "../assets/Materials/Silicone/orange_bone.png";
-import whiteBone from "../assets/Materials/Silicone/white_bone.png";
-import yellowBone from "../assets/Materials/Silicone/yellow_bone.png";
+import darkblueBone from "../../assets/Materials/Silicone/darkblue_bone.png";
+import grayBone from "../../assets/Materials/Silicone/gray_bone.png";
+import lightpinkBone from "../../assets/Materials/Silicone/lightpink_bone.png";
+import offwhiteBone from "../../assets/Materials/Silicone/offwhite_bone.png";
+import orangeBone from "../../assets/Materials/Silicone/orange_bone.png";
+import whiteBone from "../../assets/Materials/Silicone/white_bone.png";
+import yellowBone from "../../assets/Materials/Silicone/yellow_bone.png";
 
 // Circle shapes
-import blueCircle from "../assets/Materials/Silicone/blue_circ.jpg";
-import orangeCircle from "../assets/Materials/Silicone/orange_circ.png";
-import redCircle from "../assets/Materials/Silicone/red_circ.png";
-import whiteCircle from "../assets/Materials/Silicone/white_circ.png";
+import blueCircle from "../../assets/Materials/Silicone/blue_circ.jpg";
+import orangeCircle from "../../assets/Materials/Silicone/orange_circ.png";
+import redCircle from "../../assets/Materials/Silicone/red_circ.png";
+import whiteCircle from "../../assets/Materials/Silicone/white_circ.png";
 
 // Rectangle shapes
-import blueRect from "../assets/Materials/Silicone/blue_rect.png";
-import darkblueRect from "../assets/Materials/Silicone/darkblue_rect.png";
-import grayRect from "../assets/Materials/Silicone/gray_rect.png";
-import greenRect from "../assets/Materials/Silicone/green_rect.png";
-import lightpinkRect from "../assets/Materials/Silicone/lightpink_rect.png";
-import lightpurpleRect from "../assets/Materials/Silicone/lightpurple_rect.png";
-import orangeRect from "../assets/Materials/Silicone/orange_rect.png";
-import pinkRect from "../assets/Materials/Silicone/pink_rect.png";
-import purpleRect from "../assets/Materials/Silicone/purple_rect.png";
-import redRect from "../assets/Materials/Silicone/red_rect.png";
-import turquoiseRect from "../assets/Materials/Silicone/turquoise_rect.png";
-import yellowRect from "../assets/Materials/Silicone/yellow_rect.jpg";
+import blueRect from "../../assets/Materials/Silicone/blue_rect.png";
+import darkblueRect from "../../assets/Materials/Silicone/darkblue_rect.png";
+import grayRect from "../../assets/Materials/Silicone/gray_rect.png";
+import greenRect from "../../assets/Materials/Silicone/green_rect.png";
+import lightpinkRect from "../../assets/Materials/Silicone/lightpink_rect.png";
+import lightpurpleRect from "../../assets/Materials/Silicone/lightpurple_rect.png";
+import orangeRect from "../../assets/Materials/Silicone/orange_rect.png";
+import pinkRect from "../../assets/Materials/Silicone/pink_rect.png";
+import purpleRect from "../../assets/Materials/Silicone/purple_rect.png";
+import redRect from "../../assets/Materials/Silicone/red_rect.png";
+import turquoiseRect from "../../assets/Materials/Silicone/turquoise_rect.png";
+import yellowRect from "../../assets/Materials/Silicone/yellow_rect.jpg";
 
 // Triangle shapes
-import greenTri from "../assets/Materials/Silicone/green_tri.png";
+import greenTri from "../../assets/Materials/Silicone/green_tri.png";
 
 // Hexagon shapes
-import purpleHex from "../assets/Materials/Silicone/purple_hex.png";
-import turquoiseHex from "../assets/Materials/Silicone/turquoise_hex.png";
+import purpleHex from "../../assets/Materials/Silicone/purple_hex.png";
+import turquoiseHex from "../../assets/Materials/Silicone/turquoise_hex.png";
 
 // Organized by shape, then by color - TWO-STEP SELECTION
 const siliconeShapes = {
@@ -130,6 +131,13 @@ function MaterialSelection() {
 
   const [step, setStep] = useState(stepFromUrl);
   const [selectedShape, setSelectedShape] = useState(shapeFromUrl);
+
+  // Debug: Log component mount
+  useEffect(() => {
+    console.log('MaterialSelection component mounted');
+    console.log('Current step:', step);
+    console.log('Selected shape:', selectedShape);
+  }, [step, selectedShape]);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [orderType, setOrderType] = useState(orderTypeFromUrl);
 
@@ -199,8 +207,13 @@ function MaterialSelection() {
       setStep(urlStep);
     }
 
-    if (urlShape !== selectedShape) {
+    // Only update selectedShape from URL if URL has a shape value
+    // This prevents overriding a valid selectedShape with null
+    if (urlShape && urlShape !== selectedShape) {
       setSelectedShape(urlShape);
+    } else if (!urlShape && urlStep <= 1) {
+      // Only clear selectedShape if we're back at step 1 and URL has no shape
+      setSelectedShape(null);
     }
 
     // Update material from URL
@@ -255,12 +268,15 @@ function MaterialSelection() {
   }, [orderType]);
 
   const handleShapeSelect = (shapeKey) => {
+    // Set state first to ensure it's available immediately
     setSelectedShape(shapeKey);
+    setStep(2);
+    
+    // Then update URL params
     const newParams = new URLSearchParams();
     newParams.set("step", "2");
     newParams.set("shape", shapeKey);
     setSearchParams(newParams);
-    setStep(2);
   };
 
   const handleColorSelect = (shapeKey, colorOption) => {
@@ -558,8 +574,9 @@ function MaterialSelection() {
         firstname: qrForm.firstname,
         lastname: qrForm.lastname || "",
         fullname: fullname,
-        petname: "", // No longer using petname in contact
+        petname: side1Config.line1 || side2Config.line1 || "", // Extract pet name from first tag line
         phone: unformattedPhone,
+        email: qrForm.email || "",
         address_line_1: qrForm.address_line_1 || "",
         address_line_2: qrForm.address_line_2 || "",
         address_line_3: qrForm.address_line_3 || "",
@@ -577,6 +594,22 @@ function MaterialSelection() {
             console.warn("Failed to save tag information, but continuing with order");
           } else {
             console.log("Tag information saved successfully:", tagResult);
+          }
+
+          // Save shipping information to shipping table
+          const shippingData = {
+            orderid: orderid,
+            address_line_1: qrForm.address_line_1 || "",
+            address_line_2: qrForm.address_line_2 || "",
+            address_line_3: qrForm.address_line_3 || "",
+            status: 'pending'
+          };
+          console.log('handleConfirmOrder (database) - Calling saveShipping with:', JSON.stringify(shippingData, null, 2));
+          const shippingResult = await saveShipping(shippingData);
+          if (!shippingResult) {
+            console.warn("Failed to save shipping information, but continuing with order");
+          } else {
+            console.log("Shipping information saved successfully:", shippingResult);
           }
         }
 
@@ -634,8 +667,9 @@ function MaterialSelection() {
           firstname: firstname,
           lastname: lastname,
           fullname: engraveForm.name,
-          petname: "", // No longer using petname in contact
+          petname: side1Config.line1 || side2Config.line1 || "", // Extract pet name from first tag line
           phone: unformattedPhone,
+          email: engraveForm.email || "",
           address_line_1: engraveForm.address_line_1 || "",
           address_line_2: engraveForm.address_line_2 || "",
           address_line_3: engraveForm.address_line_3 || "",
@@ -656,6 +690,22 @@ function MaterialSelection() {
             console.warn("Failed to save tag information, but continuing with order");
           } else {
             console.log("Tag information saved successfully:", tagResult);
+          }
+
+          // Save shipping information to shipping table
+          const shippingData = {
+            orderid: savedOrderId,
+            address_line_1: engraveForm.address_line_1 || "",
+            address_line_2: engraveForm.address_line_2 || "",
+            address_line_3: engraveForm.address_line_3 || "",
+            status: 'pending'
+          };
+          console.log('handleConfirmOrder (engrave) - Calling saveShipping with:', JSON.stringify(shippingData, null, 2));
+          const shippingResult = await saveShipping(shippingData);
+          if (!shippingResult) {
+            console.warn("Failed to save shipping information, but continuing with order");
+          } else {
+            console.log("Shipping information saved successfully:", shippingResult);
           }
         }
 
@@ -711,6 +761,20 @@ function MaterialSelection() {
     );
   }
 
+
+  // Safety check - ensure we have valid state
+  if (typeof step !== 'number' || step < 1) {
+    console.error('Invalid step value:', step);
+    return (
+      <div className="min-h-screen bg-gradient-light dark:bg-gradient-dark py-6 px-4 transition-colors duration-300">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded">
+            <p className="text-red-800 dark:text-red-300">Error: Invalid step value. Please refresh the page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-light dark:bg-gradient-dark py-6 px-4 transition-colors duration-300">
@@ -851,19 +915,19 @@ function MaterialSelection() {
         )}
 
         {/* Step 2: Color Selection */}
-        {step === 2 && selectedShape && (
+        {step === 2 && selectedShape && siliconeShapes[selectedShape] && (
           <div className="bg-white dark:bg-dark-surface rounded-xl shadow-card dark:shadow-card-dark p-6 border-2 border-light-border dark:border-dark-border">
             <div className="mb-6">
               <h1 className="text-2xl font-bold mb-2 text-light-text dark:text-dark-text">
-                Choose Your {siliconeShapes[selectedShape].name} Color
+                Choose Your {siliconeShapes[selectedShape]?.name || selectedShape} Color
               </h1>
               <p className="text-light-textMuted dark:text-dark-textMuted">
-                {siliconeShapes[selectedShape].description}
+                {siliconeShapes[selectedShape]?.description || 'Select a color for your tag'}
               </p>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {siliconeShapes[selectedShape].colors.map((colorOption) => (
+              {siliconeShapes[selectedShape]?.colors?.map((colorOption) => (
                 <div
                   key={colorOption.id}
                   onClick={() => handleColorSelect(selectedShape, colorOption)}
@@ -872,7 +936,7 @@ function MaterialSelection() {
                   <div className="w-full h-24 bg-light-tagBg dark:bg-dark-tagBg border border-light-tagBorder dark:border-dark-tagBorder rounded-lg flex items-center justify-center overflow-hidden mb-3 group-hover:scale-105 transition-transform">
                     <img
                       src={colorOption.image}
-                      alt={`${siliconeShapes[selectedShape].name} - ${colorOption.name}`}
+                      alt={`${siliconeShapes[selectedShape]?.name || selectedShape} - ${colorOption.name}`}
                       className="max-w-full max-h-full object-contain dark:brightness-110 dark:contrast-105"
                     />
                   </div>

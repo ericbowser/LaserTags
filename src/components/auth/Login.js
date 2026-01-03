@@ -1,6 +1,6 @@
 ﻿import React, {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {getContact, loginBackendLaser} from '../api/tagApi';
+import {getContact, loginBackendLaser} from '../../api/tagApi';
 import {useAuth} from './Auth0/Authorize';
 import {LoginButton, LogoutButton} from "./Auth0/LoginLogoutButton";
 

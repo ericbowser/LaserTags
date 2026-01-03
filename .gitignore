@@ -16,6 +16,7 @@ build/
 
 src/output.css
 ./src/output.css
+./src/assets/styles/output.css
 
 .env*
 .flaskenv*
@@ -35,3 +36,4 @@ src/styles/output.css
 
 .vscode/
 logs/
+generated-jwt-token.js 

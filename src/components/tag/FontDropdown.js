@@ -1,6 +1,6 @@
 // C:\Projects\LaserTags\src\components\FontDropdown.js
 import React from 'react';
-import { AVAILABLE_FONTS, getFontById } from '../config/fonts';
+import { AVAILABLE_FONTS, getFontById } from '../../config/fonts';
 import { ChevronDown } from 'lucide-react';
 
 const FontDropdown = ({ selectedFont, onFontChange, previewText = "Pet Name" }) => {

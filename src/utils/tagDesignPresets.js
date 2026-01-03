@@ -9,14 +9,14 @@ export const TAG_DESIGN_PRESETS = {
     preview: 'Simple, readable text with classic fonts',
     fontFamily: '"Times New Roman", serif',
     fontSize: {
-      petName: '18px',
+      petName: '16px',
       line1: '14px',
-      line2: '12px',
-      line3: '10px'
+      line2: '14px',
+      line3: '14px'
     },
-    fontWeight: '600',
+    fontWeight: '800',
     textAlign: 'center',
-    lineSpacing: '4px',
+    lineSpacing: '2px',
     colors: {
       text: '#1f2937',
       accent: '#4f46e5',
@@ -25,7 +25,7 @@ export const TAG_DESIGN_PRESETS = {
     layout: 'centered',
     decorations: [],
     qrCodeStyle: {
-      size: 60,
+      size: 100,
       position: 'center',
       backgroundColor: '#ffffff',
       foregroundColor: '#000000'

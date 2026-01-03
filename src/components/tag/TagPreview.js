@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
-import { generateQrCodeUrl, encodeQrCodeText } from '../utils/qrCodeUtils';
+import { generateQrCodeUrl, encodeQrCodeText } from '../../utils/qrCodeUtils';
+import QRCode from 'qrcode';
 import { Move, RotateCcw, Type, Palette } from 'lucide-react';
-import { getFontById, DEFAULT_FONT } from '../config/fonts';
-import { TAG_DESIGN_PRESETS, applyShapeAdjustments } from '../utils/tagDesignPresets';
+import { getFontById, DEFAULT_FONT } from '../../config/fonts';
+import { TAG_DESIGN_PRESETS, applyShapeAdjustments } from '../../utils/tagDesignPresets';
 
 // Import accessory SVGs
-import cleanPaw from '../assets/Materials/Accessories/clean_paw.svg';
-import superCleanPaw from '../assets/Materials/Accessories/super_clean_paw.svg';
-import simpleHeart from '../assets/Materials/Accessories/simple_heart.svg';
-import facetedHeart from '../assets/Materials/Accessories/faceted_heart.svg';
-import bonePaw from '../assets/Materials/Accessories/bone_paw.svg';
+import cleanPaw from '../../assets/Materials/Accessories/clean_paw.svg';
+import superCleanPaw from '../../assets/Materials/Accessories/super_clean_paw.svg';
+import simpleHeart from '../../assets/Materials/Accessories/simple_heart.svg';
+import bonePaw from '../../assets/Materials/Accessories/bone_paw.svg';
 
 // Accessory definitions with imported SVGs
 const ACCESSORY_ASSETS = {
   'paw_print': cleanPaw,
   'paw_clean': superCleanPaw,
   'heart': simpleHeart,
-  'heart_faceted': facetedHeart,
   'bone_paw': bonePaw,
 };
 
@@ -52,6 +50,7 @@ const TagPreview = ({
   className = ''
 }) => {
   const [qrCodeValue, setQrCodeValue] = useState('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [currentSide, setCurrentSide] = useState(1);
@@ -74,6 +73,28 @@ const TagPreview = ({
     }
   }, [orderType, formData?.userid, qrCodeText]);
 
+  // Generate QR code image when value changes
+  useEffect(() => {
+    if (qrCodeValue) {
+      QRCode.toDataURL(qrCodeValue, {
+        width: 60,
+        margin: 1,
+        errorCorrectionLevel: 'H',
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      }).then(dataUrl => {
+        setQrCodeDataUrl(dataUrl);
+      }).catch(error => {
+        console.error('Error generating QR code:', error);
+        setQrCodeDataUrl(null);
+      });
+    } else {
+      setQrCodeDataUrl(null);
+    }
+  }, [qrCodeValue]);
+
   // Normalize shape value to handle inconsistent naming
   // MaterialSelection sends: 'bone', 'rect', 'circ', 'tri', 'hex'
   // We normalize to: 'bone', 'rect', 'circle', 'tri', 'hex'
@@ -87,7 +108,7 @@ const TagPreview = ({
     return shapeMap[shape] || shape;
   };
 
-  const normalizedShape = normalizeShape(material?.shape);
+  const normalizedShape = material ? normalizeShape(material.shape) : 'circle';
 
   const handleMouseDown = (e) => {
     if (orderType !== 'database' || currentSide !== qrCodeSide || !qrCodeValue) return;
@@ -407,7 +428,7 @@ const TagPreview = ({
   };
 
   const renderQrCode = (sideNum) => {
-    if (orderType !== 'database' || !qrCodeValue || qrCodeSide !== sideNum) {
+    if (orderType !== 'database' || !qrCodeValue || !qrCodeDataUrl || qrCodeSide !== sideNum) {
       return null;
     }
     
@@ -422,12 +443,12 @@ const TagPreview = ({
         onMouseDown={handleMouseDown}
       >
         <div className="bg-white dark:bg-gray-800 p-1 rounded shadow-lg dark:shadow-xl border-2 border-gray-300 dark:border-gray-600 group-hover:border-red-500 dark:group-hover:border-coral-500 transition-colors">
-          <QRCodeSVG
-            value={qrCodeValue}
-            size={60}
-            level="H"
-            bgColor="#FFFFFF"
-            fgColor="#000000"
+          <img
+            src={qrCodeDataUrl}
+            alt="QR Code"
+            width={60}
+            height={60}
+            className="block"
           />
           <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="bg-gray-800 dark:bg-gray-900 text-white dark:text-gray-100 text-xs px-2 py-1 rounded flex items-center gap-1 whitespace-nowrap border border-gray-700 dark:border-gray-600">

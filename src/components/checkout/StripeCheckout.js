@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import {
-  PaymentElement,
-  Elements,
-  useStripe,
-  useElements,
-} from '@stripe/react-stripe-js';
+// import {
+//   PaymentElement,
+//   Elements,
+//   useStripe,
+//   useElements,
+// } from '@stripe/react-stripe-js';
 import { CreditCard, Lock } from 'lucide-react';
-import { STRIPE_API_KEY, LASER_BACKEND_BASE_URL } from '../../env.json';
 import axios from 'axios';
-import { sendEmail, updateOrderPayment } from '../api/tagApi';
+import { sendEmail, updateOrderPayment } from '../../api/tagApi';
+
+const STRIPE_API_KEY = import.meta.env.VITE_STRIPE_API_KEY;
+const LASER_BACKEND_BASE_URL = import.meta.env.VITE_LASER_BACKEND_BASE_URL;
 
 // Validate Stripe API key format
 if (!STRIPE_API_KEY) {
-  console.error('STRIPE_API_KEY is not defined in env.json');
+  console.error('STRIPE_API_KEY is not defined in environment variables');
 } else if (!STRIPE_API_KEY.startsWith('pk_test_') && !STRIPE_API_KEY.startsWith('pk_live_')) {
   console.error('Invalid Stripe API key format. Test keys should start with pk_test_, live keys with pk_live_');
 } else if (STRIPE_API_KEY.startsWith('pk_live_')) {

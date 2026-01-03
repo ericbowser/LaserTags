@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TAG_DESIGN_PRESETS, getRecommendedDesigns, getOptimalDesigns } from '../utils/tagDesignPresets';
+import { TAG_DESIGN_PRESETS, getRecommendedDesigns, getOptimalDesigns } from '../../utils/tagDesignPresets';
 import { ChevronLeft, ChevronRight, Star, Zap, Check } from 'lucide-react';
 
 const TagDesignSelector = ({ 

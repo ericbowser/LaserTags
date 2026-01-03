@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useParams} from 'react-router-dom';
 import {Box, Card, FormControl, InputLabel, MenuItem, Select, Container} from '@mui/material';
-import Materials from "../utils/Materials";
+import Materials from "../../utils/Materials";
 
 import {useLocation} from "react-router-dom";
 

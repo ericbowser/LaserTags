@@ -1,24 +1,22 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Login from "./components/Login";
-import Contact from "./components/Contact";
-import StripePayment from "./components/StripePayment";
-import SvgBackground from "./components/SvgBackground";
-import Profile from "./components/Profile";
+import Login from "./components/auth/Login";
+import Contact from "./components/contact/Contact";
+import StripePayment from "./components/checkout/StripePayment";
+import Profile from "./components/contact/Profile";
 import { Auth0Provider } from "@auth0/auth0-react";
-import { ThemeProvider } from "./components/ThemeProvider";
-import "./styles/input.css";
-import "./styles/output.css";
-import { VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID } from "../env.json";
+import { ThemeProvider } from "./components/theme/ThemeProvider";
 import App from "./components/App";
-import MaterialSelection from "./components/MaterialSelection";
-import QrcodeGenerator from "./components/QrcodeGenerator";
-import OrderSuccess from "./components/OrderSuccess";
+import MaterialSelection from "./components/material/MaterialSelection";
+import QrcodeGenerator from "./components/tag/QrcodeGenerator";
+import OrderSuccess from "./components/checkout/OrderSuccess";
+import "./assets/styles/output.css";
+import "./assets/styles/input.css";
 
 // Get environment variables - making sure they're accessible
-const domain = VITE_AUTH0_DOMAIN;
-const clientId = VITE_AUTH0_CLIENT_ID;
+const domain = import.meta.env.VITE_AUTH0_DOMAIN;
+const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
 
 const url = window.URL || window.webkitURL;
 console.log("URL: ", url);
@@ -39,30 +37,26 @@ const router = createBrowserRouter([
         <MaterialSelection />
       </div>
     ),
+    errorElement: (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Page</h1>
+          <p className="text-gray-600">Please check the browser console for details.</p>
+        </div>
+      </div>
+    ),
   },
   {
     path: "/login",
-    element: (
-      <SvgBackground>
-        <Login />
-      </SvgBackground>
-    ),
+    element: <Login />,
   },
   {
     path: "/contact/:userid",
-    element: (
-      <SvgBackground>
-        <Contact />
-      </SvgBackground>
-    ),
+    element: <Contact />,
   },
   {
     path: "/profile/:userid",
-    element: (
-      <SvgBackground>
-        <Profile />
-      </SvgBackground>
-    ),
+    element: <Profile />,
   },
   {
     path: "/materials/:profileid",

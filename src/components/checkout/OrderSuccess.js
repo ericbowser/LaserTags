@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import axios from 'axios';
-import { LASER_BACKEND_BASE_URL } from '../../env.json';
-import { sendEmail } from '../api/tagApi';
+import { sendEmail } from '../../api/tagApi';
+
+const LASER_BACKEND_BASE_URL = import.meta.env.VITE_LASER_BACKEND_BASE_URL;
 
 function OrderSuccess() {
   const [searchParams] = useSearchParams();

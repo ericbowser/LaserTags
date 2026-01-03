@@ -1,5 +1,6 @@
 ﻿import axios from 'axios';
-import {LASER_BACKEND_BASE_URL} from '../../env.json';
+
+const LASER_BACKEND_BASE_URL = import.meta.env.VITE_LASER_BACKEND_BASE_URL;
 
 async function saveContact(body = {}) {
   // Ensure all address fields are included (default to empty string if not provided)
@@ -52,6 +53,7 @@ async function getContact(contactid = null){
     let data = {};
     const url = `${LASER_BACKEND_BASE_URL}/getContact/${userid}`;
     const response = await axios.get(url);
+    console.log('getContact - response data: ', response.data);
     if (response.status === 201) {
       console.log('contact exists: ', response.data.contact);
       data = {
@@ -255,4 +257,38 @@ async function saveTag(body = {}) {
   }
 }
 
-export {saveContact, getContact, loginBackendLaser, updateContact, saveQrCode, updateOrderPayment, createOrder, sendEmail, saveTag};
+async function saveShipping(body = {}) {
+  const requestBody = {
+    orderid: body.orderid ? Number(body.orderid) : null,
+    address_line_1: body.address_line_1 || '',
+    address_line_2: body.address_line_2 || '',
+    address_line_3: body.address_line_3 || '',
+    status: body.status || 'pending'
+  };
+  
+  console.log('saveShipping - body being sent to backend:', JSON.stringify(requestBody, null, 2));
+  
+  try {
+    const response = await axios.post(`${LASER_BACKEND_BASE_URL}/saveShipping`, requestBody, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    if (response.status === 201 || response.status === 200) {
+      console.log('saveShipping - response data: ', response.data);
+      return response.data;
+    } else {
+      console.error('saveShipping - failed to save shipping', response);
+      return response;
+    }
+  } catch (error) {
+    console.error('saveShipping - error:', error);
+    if (error.response) {
+      console.error('saveShipping - error response data:', error.response.data);
+      console.error('saveShipping - error response status:', error.response.status);
+    }
+    return null;
+  }
+}
+
+export {saveContact, getContact, loginBackendLaser, updateContact, saveQrCode, updateOrderPayment, createOrder, sendEmail, saveTag, saveShipping};
