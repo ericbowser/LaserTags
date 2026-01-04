@@ -7,7 +7,7 @@ import StripeCheckout from "../checkout/StripeCheckout";
 const LASER_BACKEND_BASE_URL = import.meta.env.VITE_LASER_BACKEND_BASE_URL;
 import TagPreview from "../tag/TagPreview";
 import FontDropdown from "../tag/FontDropdown";
-import { generateQrCodeSVG, generateQrCodeUrl } from "../../utils/qrCodeUtils";
+import { generateQrCodeSVG, generateQrCodeUrl, encodeQrCodeText } from "../../utils/qrCodeUtils";
 import { formatPhoneNumber, validatePhoneNumber, getUnformattedPhone } from "../../utils/phoneUtils";
 import { saveContact, saveQrCode, createOrder, saveTag, saveShipping } from "../../api/tagApi";
 import DarkModeToggle from "../theme/DarkModeToggle";
@@ -250,6 +250,9 @@ function MaterialSelection() {
   // Sync step to URL
   useEffect(() => {
     const urlStep = parseInt(searchParams.get("step") || "1", 10);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/9465c166-d076-4973-a708-7b037fdbb184',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MaterialSelection.js:251',message:'step useEffect triggered',data:{step:step,urlStep:urlStep,willUpdate:step !== urlStep},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D,E'})}).catch(()=>{});
+    // #endregion
     if (step !== urlStep) {
       const newParams = new URLSearchParams(searchParams);
       newParams.set("step", step.toString());
@@ -335,7 +338,13 @@ function MaterialSelection() {
 
   // Flip to design the other side
   const handleFlipDesignSide = () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/9465c166-d076-4973-a708-7b037fdbb184',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MaterialSelection.js:337',message:'handleFlipDesignSide called',data:{currentDesigningSide:designingSide,currentStep:step},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
+    // #endregion
     setDesigningSide(designingSide === 1 ? 2 : 1);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/9465c166-d076-4973-a708-7b037fdbb184',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MaterialSelection.js:339',message:'handleFlipDesignSide after setDesigningSide',data:{newDesigningSide:designingSide === 1 ? 2 : 1,currentStep:step},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
+    // #endregion
   };
 
   const handleQrFormChange = (e) => {
@@ -366,6 +375,9 @@ function MaterialSelection() {
 
   // Unified submit handler for tag design
   const handleSubmitTagDesign = async (e) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/9465c166-d076-4973-a708-7b037fdbb184',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MaterialSelection.js:368',message:'handleSubmitTagDesign called',data:{eventType:e.type,eventTarget:e.target.tagName,currentStep:step,orderType:orderType},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,C'})}).catch(()=>{});
+    // #endregion
     e.preventDefault();
     setError(null);
 
@@ -401,6 +413,9 @@ function MaterialSelection() {
     }
 
     // Move to review step
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/9465c166-d076-4973-a708-7b037fdbb184',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MaterialSelection.js:403',message:'Moving to review step',data:{currentStep:step,orderType:orderType},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,D'})}).catch(()=>{});
+    // #endregion
     const newParams = new URLSearchParams(searchParams);
     newParams.set("step", "5");
     setSearchParams(newParams);
@@ -483,6 +498,7 @@ function MaterialSelection() {
   };
 
   // Helper function to map tag data to tag table format
+  // Uses new database schema: side_1_text_line_1, side_2_text_line_1, etc.
   const mapTagData = (orderid, side1Config, side2Config, orderType, qrCodeSide = 2) => {
     console.log('mapTagData - Input parameters:', {
       orderid,
@@ -492,53 +508,27 @@ function MaterialSelection() {
       qrCodeSide
     });
 
+    const isQrCodeOrder = orderType === 'database';
+    
+    // For database orders, skip text on the QR code side
+    const side1Line1 = (isQrCodeOrder && qrCodeSide === 1) ? '' : (side1Config?.line1 || '');
+    const side1Line2 = (isQrCodeOrder && qrCodeSide === 1) ? '' : (side1Config?.line2 || '');
+    const side1Line3 = (isQrCodeOrder && qrCodeSide === 1) ? '' : (side1Config?.line3 || '');
+    
+    const side2Line1 = (isQrCodeOrder && qrCodeSide === 2) ? '' : (side2Config?.line1 || '');
+    const side2Line2 = (isQrCodeOrder && qrCodeSide === 2) ? '' : (side2Config?.line2 || '');
+    const side2Line3 = (isQrCodeOrder && qrCodeSide === 2) ? '' : (side2Config?.line3 || '');
+
     const tagData = {
       orderid: orderid,
-      tagside: [],
-      text_line_1: [],
-      text_line_2: '',
-      text_line_3: '',
-      text_line_4: [],
-      text_line_5: '',
-      text_line_6: '',
-      notes: ''
+      side_1_text_line_1: side1Line1,
+      side_1_text_line_2: side1Line2,
+      side_1_text_line_3: side1Line3,
+      side_2_text_line_1: side2Line1,
+      side_2_text_line_2: side2Line2,
+      side_2_text_line_3: side2Line3,
+      is_qr_code: isQrCodeOrder
     };
-
-    // Side 1: Up to 3 lines of text
-    const side1Line1 = side1Config?.line1 || '';
-    const side1Line2 = side1Config?.line2 || '';
-    const side1Line3 = side1Config?.line3 || '';
-    
-    if (side1Line1 || side1Line2 || side1Line3) {
-      tagData.tagside.push('1');
-      if (side1Line1) {
-        tagData.text_line_1.push(side1Line1);
-      }
-      if (side1Line2) {
-        tagData.text_line_2 = side1Line2;
-      }
-      if (side1Line3) {
-        tagData.text_line_3 = side1Line3;
-      }
-    }
-
-    // Side 2: Up to 3 lines of text (QR code handled separately for database orders)
-    const side2Line1 = side2Config?.line1 || '';
-    const side2Line2 = side2Config?.line2 || '';
-    const side2Line3 = side2Config?.line3 || '';
-    
-    if (side2Line1 || side2Line2 || side2Line3) {
-      tagData.tagside.push('2');
-      if (side2Line1) {
-        tagData.text_line_4.push(side2Line1);
-      }
-      if (side2Line2) {
-        tagData.text_line_5 = side2Line2;
-      }
-      if (side2Line3) {
-        tagData.text_line_6 = side2Line3;
-      }
-    }
 
     console.log('mapTagData - Mapped tag data:', JSON.stringify(tagData, null, 2));
     return tagData;
@@ -594,6 +584,32 @@ function MaterialSelection() {
             console.warn("Failed to save tag information, but continuing with order");
           } else {
             console.log("Tag information saved successfully:", tagResult);
+            
+            // Save QR code data if tag was saved successfully
+            if (tagResult.id) {
+              try {
+                const qrCodeUrl = generateQrCodeUrl(userId);
+                const qrCodeSvg = await generateQrCodeSVG(qrCodeUrl, 512, 4);
+                const qrCodeData = {
+                  tagid: tagResult.id,
+                  qr_code_data: {
+                    url: qrCodeUrl,
+                    svg: qrCodeSvg,
+                    text: qrCodeText.line1 || qrCodeText.line2 || qrCodeText.line3 
+                      ? encodeQrCodeText(qrCodeText.line1 || '', qrCodeText.line2 || '', qrCodeText.line3 || '')
+                      : null
+                  }
+                };
+                const qrCodeResult = await saveQrCode(qrCodeData);
+                if (!qrCodeResult) {
+                  console.warn("Failed to save QR code data, but continuing with order");
+                } else {
+                  console.log("QR code data saved successfully:", qrCodeResult);
+                }
+              } catch (qrError) {
+                console.error("Error saving QR code:", qrError);
+              }
+            }
           }
 
           // Save shipping information to shipping table
@@ -1035,7 +1051,23 @@ function MaterialSelection() {
 
 
         {/* Step 4: Form Entry */}
-        {step === 4 && (
+        {step === 4 && (() => {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/9465c166-d076-4973-a708-7b037fdbb184',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MaterialSelection.js:1039',message:'Step 4 render check',data:{step,selectedMaterialIsNull:selectedMaterial===null,selectedMaterialId:selectedMaterial?.id,hasImage:!!selectedMaterial?.image},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+          // #endregion
+          if (!selectedMaterial) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/9465c166-d076-4973-a708-7b037fdbb184',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MaterialSelection.js:1043',message:'Step 4 blocked - selectedMaterial is null',data:{step,orderType},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+            return (
+              <div className="bg-white dark:bg-dark-surface rounded-xl shadow-card dark:shadow-card-dark p-6 border-2 border-light-border dark:border-dark-border">
+                <p className="text-center text-gray-600 dark:text-gray-400">
+                  Please select a material first.
+                </p>
+              </div>
+            );
+          }
+          return (
           <div className="bg-white dark:bg-dark-surface rounded-xl shadow-card dark:shadow-card-dark p-6 border-2 border-light-border dark:border-dark-border">
             <div className="mb-4 flex items-center gap-3 pb-3 border-b border-light-border dark:border-dark-border">
               <div className="w-14 h-14 bg-light-tagBg dark:bg-dark-tagBg border border-light-tagBorder dark:border-dark-tagBorder rounded-lg flex items-center justify-center">
@@ -1065,29 +1097,26 @@ function MaterialSelection() {
             </p>
 
             {/* Unified Tag Design Form */}
-            <form onSubmit={handleSubmitTagDesign} className="space-y-4">
-              {/* Side-by-side layout: Preview on left, Form on right */}
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Left: Tag Preview */}
-                <div className="lg:sticky lg:top-4 lg:self-start">
-                  <TagPreview
-                    material={selectedMaterial}
-                    orderType={orderType}
-                    formData={orderType === "database" ? qrForm : engraveForm}
-                    qrCodePosition={qrCodePosition}
-                    onQrPositionChange={setQrCodePosition}
-                    side1Config={side1Config}
-                    side2Config={side2Config}
-                    qrCodeSide={qrCodeSide}
-                    qrCodeText={qrCodeText}
-                    selectedFont={selectedFont}
-                    textCase={textCase}
-                    onTextCaseChange={setTextCase}
-                  />
-                </div>
+            <form onSubmit={handleSubmitTagDesign} className="space-y-6">
+              {/* Full-width Tag Preview on top */}
+              <div className="w-full">
+                <TagPreview
+                  material={selectedMaterial}
+                  orderType={orderType}
+                  formData={orderType === "database" ? qrForm : engraveForm}
+                  side1Config={side1Config}
+                  side2Config={side2Config}
+                  qrCodeSide={qrCodeSide}
+                  qrCodeText={qrCodeText}
+                  selectedFont={selectedFont}
+                  textCase={textCase}
+                  onTextCaseChange={setTextCase}
+                  currentSide={designingSide}
+                />
+              </div>
 
-                {/* Right: Form Fields */}
-                <div className="space-y-4">
+              {/* Form Fields below preview */}
+              <div className="space-y-4">
                   {/* QR Code Side Selection - only for database orders */}
                   {orderType === 'database' && (
                     <div className="mb-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
@@ -1201,8 +1230,8 @@ function MaterialSelection() {
                   </div>
 
                   {/* Side Indicator and Flip Button */}
-                  <div className="flex items-center justify-between p-3 bg-light-surface dark:bg-dark-surfaceLight rounded-lg border border-light-border dark:border-dark-border">
-                    <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between p-4 bg-light-surface dark:bg-dark-surfaceLight rounded-lg border border-light-border dark:border-dark-border">
+                    <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all ${
                           designingSide === 1 
@@ -1211,12 +1240,12 @@ function MaterialSelection() {
                         }`}>
                           1
                         </div>
-                        <span className={`text-xs font-medium ${
+                        <span className={`text-sm font-medium ${
                           designingSide === 1 
                             ? 'text-light-primary dark:text-dark-primary' 
                             : 'text-light-textMuted dark:text-dark-textMuted'
                         }`}>
-                          {side1Config.line1 || side1Config.line2 || side1Config.line3 ? '✓' : ''} Side 1
+                          Side 1 {side1Config.line1 || side1Config.line2 || side1Config.line3 ? '✓' : ''}
                         </span>
                       </div>
                       <div className="text-light-textMuted dark:text-dark-textMuted">|</div>
@@ -1228,44 +1257,37 @@ function MaterialSelection() {
                         }`}>
                           2
                         </div>
-                        <span className={`text-xs font-medium ${
+                        <span className={`text-sm font-medium ${
                           designingSide === 2 
                             ? 'text-light-primary dark:text-dark-primary' 
                             : 'text-light-textMuted dark:text-dark-textMuted'
                         }`}>
-                          {side2Config.line1 || side2Config.line2 || side2Config.line3 ? '✓' : ''} Side 2
+                          Side 2 {side2Config.line1 || side2Config.line2 || side2Config.line3 ? '✓' : ''}
                         </span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={(e) => {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/9465c166-d076-4973-a708-7b037fdbb184',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MaterialSelection.js:1256',message:'Flip button clicked',data:{buttonType:e.currentTarget.type,currentStep:step,designingSide:designingSide},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,C'})}).catch(()=>{});
+                        // #endregion
                         e.preventDefault();
                         e.stopPropagation();
                         handleFlipDesignSide();
                       }}
-                      className="flex items-center gap-1 text-sm text-light-primary dark:text-dark-primary hover:text-light-primaryHover dark:hover:text-dark-primaryHover transition-colors px-3 py-1.5 rounded hover:bg-light-surface dark:hover:bg-dark-surfaceHover"
+                      className="flex items-center gap-2 text-sm font-semibold text-light-primary dark:text-dark-primary hover:text-light-primaryHover dark:hover:text-dark-primaryHover transition-colors px-4 py-2 rounded-lg hover:bg-light-surface dark:hover:bg-dark-surfaceHover border border-light-border dark:border-dark-border"
                     >
                       <RotateCcw className="w-4 h-4" />
-                      <span>Switch to Side {designingSide === 1 ? 2 : 1}</span>
+                      <span>Flip to Side {designingSide === 1 ? 2 : 1}</span>
                     </button>
                   </div>
 
-                  {/* Side 1 Inputs */}
-                  {designingSide === 1 && (
+                  {/* Side 1 Inputs - only show if not QR code side for database orders */}
+                  {designingSide === 1 && !(orderType === "database" && qrCodeSide === 1) && (
                     <div className="space-y-3 transition-opacity duration-300">
                       <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
                         Side 1 Text (Front)
-                        {orderType === "database" && qrCodeSide === 1 && (
-                          <span className="text-xs text-light-textMuted dark:text-dark-textMuted ml-2">
-                            (QR code will be on this side)
-                          </span>
-                        )}
-                        {orderType === "database" && qrCodeSide === 2 && (
-                          <span className="text-xs text-light-textMuted dark:text-dark-textMuted ml-2">
-                            (Regular text engraving)
-                          </span>
-                        )}
                       </label>
                       <div>
                         <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
@@ -1310,21 +1332,11 @@ function MaterialSelection() {
                     </div>
                   )}
 
-                  {/* Side 2 Inputs */}
-                  {designingSide === 2 && (
+                  {/* Side 2 Inputs - only show if not QR code side for database orders */}
+                  {designingSide === 2 && !(orderType === "database" && qrCodeSide === 2) && (
                     <div className="space-y-3 transition-opacity duration-300">
                       <label className="block text-sm font-semibold text-light-text dark:text-dark-text mb-2">
                         Side 2 Text (Back)
-                        {orderType === "database" && qrCodeSide === 2 && (
-                          <span className="text-xs text-light-textMuted dark:text-dark-textMuted ml-2">
-                            (QR code will be on this side)
-                          </span>
-                        )}
-                        {orderType === "database" && qrCodeSide === 1 && (
-                          <span className="text-xs text-light-textMuted dark:text-dark-textMuted ml-2">
-                            (Regular text engraving)
-                          </span>
-                        )}
                       </label>
                       <div>
                         <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
@@ -1427,12 +1439,12 @@ function MaterialSelection() {
                       {isSubmitting ? "Submitting..." : "Continue to Review"}
                     </button>
                   </div>
-                </div>
               </div>
             </form>
 
           </div>
-        )}
+          );
+        })()}
 
         {/* Step 5: Review & Confirm */}
         {step === 5 && (orderType === "database" || orderType === "engrave") && (

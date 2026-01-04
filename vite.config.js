@@ -3,7 +3,7 @@ const commonjs = require("@rollup/plugin-commonjs");
 const {nodePolyfills} = require('vite-plugin-node-polyfills');
 const react = require('@vitejs/plugin-react');
 const svgr = require('vite-plugin-svgr').default;
-const {HOST, PORT} = require('./env.json');
+const {HOST, PORT} = require('dotenv').config().parsed;
 
 module.exports = defineConfig({
   build: {

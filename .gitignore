@@ -34,6 +34,8 @@ claude.md
 src/styles/output.css
 /src/assets/Materials/Engravings/
 
+.cursor/
 .vscode/
 logs/
 generated-jwt-token.js 
+.cursor/debug.log

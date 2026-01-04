@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 
 const LASER_BACKEND_BASE_URL = import.meta.env.VITE_LASER_BACKEND_BASE_URL;
 
@@ -209,8 +209,18 @@ async function sendEmail(body = {}) {
 
 async function saveTag(body = {}) {
   // Ensure all required fields are included with proper types
+  // Support both old format (text_line_1, etc.) and new format (side_1_text_line_1, etc.)
   const requestBody = {
     orderid: body.orderid ? Number(body.orderid) : null,
+    // New schema fields
+    side_1_text_line_1: body.side_1_text_line_1 || '',
+    side_1_text_line_2: body.side_1_text_line_2 || '',
+    side_1_text_line_3: body.side_1_text_line_3 || '',
+    side_2_text_line_1: body.side_2_text_line_1 || '',
+    side_2_text_line_2: body.side_2_text_line_2 || '',
+    side_2_text_line_3: body.side_2_text_line_3 || '',
+    is_qr_code: body.is_qr_code !== undefined ? Boolean(body.is_qr_code) : false,
+    // Legacy fields (for backward compatibility)
     tagside: Array.isArray(body.tagside) ? body.tagside : [],
     text_line_1: Array.isArray(body.text_line_1) ? body.text_line_1 : [],
     text_line_2: body.text_line_2 || '',

@@ -14,6 +14,7 @@ import OrderSuccess from "./components/checkout/OrderSuccess";
 import "./assets/styles/output.css";
 import "./assets/styles/input.css";
 
+
 // Get environment variables - making sure they're accessible
 const domain = import.meta.env.VITE_AUTH0_DOMAIN;
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
