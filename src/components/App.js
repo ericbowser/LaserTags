@@ -16,40 +16,11 @@ import heroCollection from "../assets/Materials/Silicone/Examples/hero_collectio
 
 import DarkModeToggle from "./theme/DarkModeToggle";
 
-import * as Sentry from "@sentry/react";
-
-Sentry.init({
-  dsn: "https://91d897f01542770fddff3460cb98a931@o4506696871575552.ingest.us.sentry.io/4510648262524928",
-  // Setting this option to true will send default PII data to Sentry.
-  // For example, automatic IP address collection on events
-  sendDefaultPii: true,
-  // Enable logs to be sent to Sentry
-  enableLogs: true
-});
-function ErrorButton() {
-  Sentry.logger.info("User triggered test log", {
-    log_source: "sentry_test",
-  });
-  return (
-    <button
-      onClick={() => {
-        Sentry.logger.info("User triggered test log", {
-          log_source: "sentry_test",
-        });
-        throw new Error("This is your first error!");
-      }}
-    >
-      Break the world
-    </button>
-  );
-}
-
 function App() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white dark:bg-charcoal-900 transition-colors duration-300">
-      <ErrorButton />
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 dark:bg-charcoal-800/95 backdrop-blur-md border-b border-gray-200 dark:border-charcoal-700 shadow-sm dark:shadow-dark">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">

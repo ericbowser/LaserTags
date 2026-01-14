@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-// import {
-//   PaymentElement,
-//   Elements,
-//   useStripe,
-//   useElements,
-// } from '@stripe/react-stripe-js';
+import {
+  PaymentElement,
+  Elements,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js';
 import { CreditCard, Lock } from 'lucide-react';
 import axios from 'axios';
 import { sendEmail, updateOrderPayment } from '../../api/tagApi';

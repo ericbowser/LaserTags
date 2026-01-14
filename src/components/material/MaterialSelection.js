@@ -148,7 +148,9 @@ function MaterialSelection() {
     petname: "",
     address_line_1: "",
     address_line_2: "",
-    address_line_3: "",
+    city: "",
+    state: "",
+    zip: "",
     phone: "",
     email: "",
   });
@@ -163,7 +165,9 @@ function MaterialSelection() {
     phone: "",
     address_line_1: "",
     address_line_2: "",
-    address_line_3: "",
+    city: "",
+    state: "",
+    zip: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1614,33 +1618,64 @@ function MaterialSelection() {
                         required
                       />
                     </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
+                    <div>
+                      <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                        Apt/Unit
+                      </label>
+                      <input
+                        type="text"
+                        name="address_line_2"
+                        value={orderType === "database" ? qrForm.address_line_2 : engraveForm.address_line_2}
+                        onChange={orderType === "database" ? handleQrFormChange : handleEngraveChange}
+                        placeholder="Apt 4B"
+                        className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                      />
+                    </div>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                          Apt/Unit
+                          City <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          name="address_line_2"
-                          value={orderType === "database" ? qrForm.address_line_2 : engraveForm.address_line_2}
+                          name="city"
+                          value={orderType === "database" ? qrForm.city : engraveForm.city}
                           onChange={orderType === "database" ? handleQrFormChange : handleEngraveChange}
-                          placeholder="Apt 4B"
+                          placeholder="Salt Lake City"
                           className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                          required
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
-                          Additional Info
+                          State <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          name="address_line_3"
-                          value={orderType === "database" ? qrForm.address_line_3 : engraveForm.address_line_3}
+                          name="state"
+                          value={orderType === "database" ? qrForm.state : engraveForm.state}
                           onChange={orderType === "database" ? handleQrFormChange : handleEngraveChange}
-                          placeholder="City, State, ZIP"
-                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                          placeholder="UT"
+                          maxLength={2}
+                          className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all uppercase"
+                          required
                         />
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-light-text dark:text-dark-text mb-2">
+                        ZIP Code <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="zip"
+                        value={orderType === "database" ? qrForm.zip : engraveForm.zip}
+                        onChange={orderType === "database" ? handleQrFormChange : handleEngraveChange}
+                        placeholder="84118"
+                        maxLength={10}
+                        className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-surfaceLight border-2 border-light-border dark:border-dark-border text-light-text dark:text-dark-text rounded-lg focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary focus:border-light-primary dark:focus:border-dark-primary transition-all"
+                        required
+                      />
                     </div>
                   </div>
                 </div>

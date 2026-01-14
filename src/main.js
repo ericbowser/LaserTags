@@ -11,8 +11,14 @@ import App from "./components/App";
 import MaterialSelection from "./components/material/MaterialSelection";
 import QrcodeGenerator from "./components/tag/QrcodeGenerator";
 import OrderSuccess from "./components/checkout/OrderSuccess";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { initSentry } from "./config/sentry";
+import * as Sentry from "@sentry/react";
 import "./assets/styles/output.css";
 import "./assets/styles/input.css";
+
+// Initialize Sentry BEFORE React renders
+initSentry();
 
 
 // Get environment variables - making sure they're accessible
@@ -81,16 +87,21 @@ const router = createBrowserRouter([
   },
 ]);
 
+// Wrap RouterProvider with Sentry for route tracking
+const SentryRouterProvider = Sentry.withSentryReactRouterV7Routing(RouterProvider);
+
 createRoot(document.getElementById("root")).render(
-  <ThemeProvider>
-    <Auth0Provider
-      domain={domain}
-      clientId={clientId}
-      authorizationParams={{
-        redirect_uri: window.location.origin,
-      }}
-    >
-      <RouterProvider router={router} />
-    </Auth0Provider>
-  </ThemeProvider>
+  <ErrorBoundary>
+    <ThemeProvider>
+      <Auth0Provider
+        domain={domain}
+        clientId={clientId}
+        authorizationParams={{
+          redirect_uri: window.location.origin,
+        }}
+      >
+        <SentryRouterProvider router={router} />
+      </Auth0Provider>
+    </ThemeProvider>
+  </ErrorBoundary>
 );
