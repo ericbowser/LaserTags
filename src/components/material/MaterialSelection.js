@@ -471,7 +471,17 @@ function MaterialSelection() {
   };
 
   const generateUserId = () => {
-    return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Use a cryptographically secure random value for the user ID suffix
+    let randomPart = "";
+    if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+      const array = new Uint32Array(4);
+      crypto.getRandomValues(array);
+      randomPart = Array.from(array, (val) => val.toString(36)).join("").slice(0, 16);
+    } else {
+      // Fallback: retain previous behavior if crypto is unavailable
+      randomPart = Math.random().toString(36).substr(2, 16);
+    }
+    return `user_${Date.now()}_${randomPart}`;
   };
 
   const saveContactAndCreateOrder = async (contactData, hasQrCode) => {
