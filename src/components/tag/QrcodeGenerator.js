@@ -99,9 +99,24 @@ const QrcodeGenerator = () => {
     }
   };
 
+  const getSecureRandomBase36 = (length) => {
+    // Generate a cryptographically secure random string using browser crypto API
+    const bytes = new Uint8Array(length);
+    // window.crypto is available in modern browsers; this avoids Math.random()
+    window.crypto.getRandomValues(bytes);
+    let result = '';
+    for (let i = 0; i < bytes.length; i++) {
+      // Map each byte to a value in [0, 35] to produce base-36 characters
+      const value = bytes[i] % 36;
+      result += value.toString(36);
+    }
+    return result;
+  };
+
   const generateUserId = () => {
     // Generate a unique ID - in production, this should come from your backend
-    return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const randomPart = getSecureRandomBase36(9);
+    return `user_${Date.now()}_${randomPart}`;
   };
 
   const downloadSVG = () => {
